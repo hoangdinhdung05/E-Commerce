@@ -1,5 +1,7 @@
 package com.training.demo.controller;
 
+import com.training.demo.application.usecase.user.ChangePasswordUseCase;
+import com.training.demo.application.usecase.user.GetUserUseCase;
 import com.training.demo.dto.request.User.AdminCreateUserRequest;
 import com.training.demo.dto.request.User.ChangePasswordRequest;
 import com.training.demo.dto.request.User.UpdateUserRequest;
@@ -30,6 +32,10 @@ import java.util.stream.Collectors;
 public class UserController {
 
     private final UserService userService;
+    
+    // Use Cases
+    private final GetUserUseCase getUserUseCase;
+    private final ChangePasswordUseCase changePasswordUseCase;
 
     /**
      * Api get user info by userId
@@ -38,8 +44,8 @@ public class UserController {
      */
     @GetMapping("/{id}")
     public ResponseEntity<?> getUser(@PathVariable Long id) {
-        log.info("[User] Get user by userId: {}", id);
-        return ResponseEntity.ok(BaseResponse.success(userService.getUser(id)));
+        log.info("[UserController] Getting user by id: {}", id);
+        return ResponseEntity.ok(BaseResponse.success(getUserUseCase.execute(id)));
     }
 
     /**
@@ -74,9 +80,10 @@ public class UserController {
      */
     @PostMapping("/change-password")
     public ResponseEntity<?> changePassword(@RequestBody @Valid ChangePasswordRequest request) {
-        log.info("[User] Change password for user");
-        userService.changePassword(request);
-        return ResponseEntity.ok(BaseResponse.success());
+        log.info("[UserController] Changing password for current user");
+        Long userId = com.training.demo.security.SecurityUtils.getCurrentUserDetails().getUser().getId();
+        changePasswordUseCase.execute(userId, request);
+        return ResponseEntity.ok(BaseResponse.success("Password changed successfully"));
     }
 
     /**

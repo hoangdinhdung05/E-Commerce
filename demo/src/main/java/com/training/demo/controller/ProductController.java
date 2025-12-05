@@ -1,5 +1,8 @@
 package com.training.demo.controller;
 
+import com.training.demo.application.usecase.product.CreateProductUseCase;
+import com.training.demo.application.usecase.product.GetProductUseCase;
+import com.training.demo.application.usecase.product.UpdateProductUseCase;
 import com.training.demo.dto.request.Product.ProductCreateRequest;
 import com.training.demo.dto.request.Product.ProductRequest;
 import com.training.demo.dto.response.Product.ProductResponse;
@@ -28,6 +31,11 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
+    
+    // Use Cases
+    private final GetProductUseCase getProductUseCase;
+    private final CreateProductUseCase createProductUseCase;
+    private final UpdateProductUseCase updateProductUseCase;
 
     /**
      * Create a new product
@@ -37,8 +45,8 @@ public class ProductController {
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     @PostMapping(value = "/create")
     public ResponseEntity<?> createProduct(@RequestBody ProductCreateRequest request) {
-        log.info("[Product] Create new product: {}", request.getName());
-        return ResponseEntity.ok(BaseResponse.success(productService.createProduct(request)));
+        log.info("[ProductController] Creating new product: {}", request.getName());
+        return ResponseEntity.ok(BaseResponse.success(createProductUseCase.execute(request)));
     }
 
     /**
@@ -50,8 +58,8 @@ public class ProductController {
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     @PatchMapping("/{id}")
     public ResponseEntity<?> updateProduct(@PathVariable Long id, @RequestBody ProductRequest request) {
-        log.info("[Product] Update product with id: {}", id);
-        return ResponseEntity.ok(BaseResponse.success(productService.updateProduct(id, request)));
+        log.info("[ProductController] Updating product with id: {}", id);
+        return ResponseEntity.ok(BaseResponse.success(updateProductUseCase.execute(id, request)));
     }
 
     /**
@@ -114,8 +122,8 @@ public class ProductController {
      */
     @GetMapping("/{productId}")
     public ResponseEntity<?> getProductById(@PathVariable Long productId) {
-        log.info("[Product] Get product by id: {}", productId);
-        return ResponseEntity.ok(BaseResponse.success(productService.getProductById(productId)));
+        log.info("[ProductController] Getting product by id: {}", productId);
+        return ResponseEntity.ok(BaseResponse.success(getProductUseCase.execute(productId)));
     }
 
     /**
