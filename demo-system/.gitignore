@@ -1,6 +1,4 @@
-# See http://help.github.com/ignore-files/ for more about ignoring files.
-
-# Compiled output
+# === Angular default ignore ===
 /dist
 /tmp
 /out-tsc
@@ -29,9 +27,9 @@ yarn-error.log
 .history/*
 
 # Miscellaneous
-/.angular/cache
+/.angular
 .sass-cache/
-/connect.lock
+.connect.lock
 /coverage
 /libpeerconnection.log
 testem.log
@@ -40,3 +38,32 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# === CUSTOM (for your project) ===
+
+# Environments / Secrets
+*.env
+*.env.*
+environment.local.ts
+environment.dev.ts
+environment.staging.ts
+environment.prod.ts
+
+# Export / temp
+exports/
+export/
+temp/
+tmp/
+*.tmp
+
+# Ignore media files if they are generated or not needed in repo
+*.webp
+*.png
+*.jpg
+*.jpeg
+
+# Logs
+*.log
+
+# Local config
+*.iml
