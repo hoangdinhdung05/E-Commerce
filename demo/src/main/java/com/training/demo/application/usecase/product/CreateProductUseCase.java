@@ -6,7 +6,7 @@ import com.training.demo.entity.Category;
 import com.training.demo.entity.Product;
 import com.training.demo.exception.BadRequestException;
 import com.training.demo.exception.NotFoundException;
-import com.training.demo.mapper.ProductMapper;
+import com.training.demo.mapper.mapstruct.ProductMapperMS;
 import com.training.demo.repository.CategoryRepository;
 import com.training.demo.repository.ProductRepository;
 import com.training.demo.service.FileService;
@@ -29,6 +29,7 @@ public class CreateProductUseCase {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final FileService fileService;
+    private final ProductMapperMS productMapper;
 
     @Transactional
     public ProductResponse execute(ProductCreateRequest request) {
@@ -78,6 +79,6 @@ public class CreateProductUseCase {
 
         log.info("[CreateProductUseCase] Product created successfully with id: {}", savedProduct.getId());
 
-        return ProductMapper.toProductResponse(savedProduct);
+        return productMapper.toProductResponse(savedProduct);
     }
 }

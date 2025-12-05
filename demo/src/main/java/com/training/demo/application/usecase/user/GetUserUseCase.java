@@ -3,7 +3,7 @@ package com.training.demo.application.usecase.user;
 import com.training.demo.dto.response.User.UserResponse;
 import com.training.demo.entity.User;
 import com.training.demo.exception.NotFoundException;
-import com.training.demo.mapper.UserMapper;
+import com.training.demo.mapper.mapstruct.UserMapperMS;
 import com.training.demo.repository.UserRepository;
 import com.training.demo.utils.constants.ApiConstants;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class GetUserUseCase {
 
     private final UserRepository userRepository;
+    private final UserMapperMS userMapper;
 
     @Transactional(readOnly = true)
     public UserResponse execute(Long userId) {
@@ -31,6 +32,6 @@ public class GetUserUseCase {
                     String.format(ApiConstants.Messages.USER_NOT_FOUND_ID, userId)
                 ));
 
-        return UserMapper.toUserResponse(user);
+        return userMapper.toUserResponse(user);
     }
 }

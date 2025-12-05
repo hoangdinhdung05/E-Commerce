@@ -8,6 +8,7 @@ import com.training.demo.repository.PaymentRepository;
 import com.training.demo.repository.ProductRepository;
 import com.training.demo.repository.UserRepository;
 import com.training.demo.utils.enums.PaymentStatus;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.*;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.util.List;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class JasperReportService {
 
     private final JasperReportGenerator reportGenerator;

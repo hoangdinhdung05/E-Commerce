@@ -6,7 +6,7 @@ import com.training.demo.entity.Category;
 import com.training.demo.entity.Product;
 import com.training.demo.exception.BadRequestException;
 import com.training.demo.exception.NotFoundException;
-import com.training.demo.mapper.ProductMapper;
+import com.training.demo.mapper.mapstruct.ProductMapperMS;
 import com.training.demo.repository.CategoryRepository;
 import com.training.demo.repository.ProductRepository;
 import com.training.demo.service.FileService;
@@ -29,6 +29,7 @@ public class UpdateProductUseCase {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final FileService fileService;
+    private final ProductMapperMS productMapper;
 
     @Transactional
     public ProductResponse execute(Long productId, ProductRequest request) {
@@ -93,6 +94,6 @@ public class UpdateProductUseCase {
 
         log.info("[UpdateProductUseCase] Product updated successfully: {}", updatedProduct.getId());
 
-        return ProductMapper.toProductResponse(updatedProduct);
+        return productMapper.toProductResponse(updatedProduct);
     }
 }
