@@ -1,0 +1,43 @@
+# IntelliJ IDEA
+.idea/
+*.iml
+out/
+
+# VSCode
+.vscode/
+
+# Node
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Angular build
+dist/
+.angular/
+
+# Java
+target/
+*.jar
+*.war
+*.class
+
+# Logs
+*.log
+
+# Environments
+.env
+.env.*
+
+# OS generated
+.DS_Store
+Thumbs.db
+
+# Images (nếu không muốn track ảnh media)
+*.png
+*.jpg
+*.jpeg
+*.webp
+
+# Others
+*.xml
