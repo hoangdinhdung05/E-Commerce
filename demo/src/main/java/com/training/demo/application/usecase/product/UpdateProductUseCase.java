@@ -1,5 +1,6 @@
 package com.training.demo.application.usecase.product;
 
+import com.training.demo.config.CacheConfig;
 import com.training.demo.dto.request.Product.ProductRequest;
 import com.training.demo.dto.response.Product.ProductResponse;
 import com.training.demo.entity.Category;
@@ -14,12 +15,15 @@ import com.training.demo.utils.constants.ApiConstants;
 import com.training.demo.utils.enums.UploadKind;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Use Case: Update Product
  * Business logic: Validate, update fields, handle image upload
+ * Invalidates specific product cache and product list cache
  */
 @Component
 @RequiredArgsConstructor
@@ -31,6 +35,10 @@ public class UpdateProductUseCase {
     private final FileService fileService;
     private final ProductMapperMS productMapper;
 
+    @Caching(evict = {
+        @CacheEvict(value = CacheConfig.PRODUCT_CACHE, key = "#productId"),
+        @CacheEvict(value = CacheConfig.PRODUCT_LIST_CACHE, allEntries = true)
+    })
     @Transactional
     public ProductResponse execute(Long productId, ProductRequest request) {
         log.info("[UpdateProductUseCase] Updating product id: {}", productId);

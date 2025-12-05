@@ -1,5 +1,6 @@
 package com.training.demo.application.usecase.product;
 
+import com.training.demo.config.CacheConfig;
 import com.training.demo.dto.request.Product.ProductCreateRequest;
 import com.training.demo.dto.response.Product.ProductResponse;
 import com.training.demo.entity.Category;
@@ -14,12 +15,14 @@ import com.training.demo.utils.constants.ApiConstants;
 import com.training.demo.utils.enums.UploadKind;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Use Case: Create Product
  * Business logic: Validate, upload image, create product with category
+ * Invalidates product list cache after creation
  */
 @Component
 @RequiredArgsConstructor
@@ -31,6 +34,7 @@ public class CreateProductUseCase {
     private final FileService fileService;
     private final ProductMapperMS productMapper;
 
+    @CacheEvict(value = CacheConfig.PRODUCT_LIST_CACHE, allEntries = true)
     @Transactional
     public ProductResponse execute(ProductCreateRequest request) {
         log.info("[CreateProductUseCase] Creating product: {}", request.getName());

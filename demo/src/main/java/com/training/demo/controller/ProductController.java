@@ -1,6 +1,7 @@
 package com.training.demo.controller;
 
 import com.training.demo.application.usecase.product.CreateProductUseCase;
+import com.training.demo.application.usecase.product.DeleteProductUseCase;
 import com.training.demo.application.usecase.product.GetProductUseCase;
 import com.training.demo.application.usecase.product.UpdateProductUseCase;
 import com.training.demo.dto.request.Product.ProductCreateRequest;
@@ -36,6 +37,7 @@ public class ProductController {
     private final GetProductUseCase getProductUseCase;
     private final CreateProductUseCase createProductUseCase;
     private final UpdateProductUseCase updateProductUseCase;
+    private final DeleteProductUseCase deleteProductUseCase;
 
     /**
      * Create a new product
@@ -70,9 +72,9 @@ public class ProductController {
     @DeleteMapping("/{productId}")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     public ResponseEntity<?> deleteProductById(@PathVariable Long productId) {
-        log.info("[Product] Delete product with id: {}", productId);
-        productService.deleteProductById(productId);
-        return ResponseEntity.ok(BaseResponse.success());
+        log.info("[ProductController] Deleting product with id: {}", productId);
+        deleteProductUseCase.execute(productId);
+        return ResponseEntity.ok(BaseResponse.success("Product deleted successfully"));
     }
 
     /**
