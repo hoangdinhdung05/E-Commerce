@@ -1,0 +1,143 @@
+# Development Environment Configuration
+server:
+  port: 8080
+
+spring:
+  application:
+    name: demo-system
+
+  # Database - Development
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/demo-system}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:123456789}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 20000
+      idle-timeout: 300000
+      max-lifetime: 1200000
+
+  # JPA Configuration - Development
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        use_sql_comments: true
+        jdbc:
+          batch_size: 20
+
+  # Redis - Development
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 60000ms
+      password: ${REDIS_PASSWORD:}
+
+  # RabbitMQ - Development
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: 1
+        retry:
+          enabled: true
+          initial-interval: 3000
+          max-attempts: 3
+
+  # Mail Config - Development
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  # File Upload
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  # DevTools
+  devtools:
+    add-properties: true
+    restart:
+      enabled: true
+
+# JWT Configuration - Use environment variables
+jwt:
+  expiryMinutes: ${JWT_EXPIRY_MINUTES:15}
+  expiryDay: ${JWT_EXPIRY_DAY:14}
+  accessKey: ${JWT_ACCESS_KEY:p1zs6HE4bebUL6aVjJhSEtj/Bp4rhQPK3vUR2gpcA06muNhYO77Z9kzb3U5sDXBkdpEZwECJfm0tNuDRiVu29g==}
+  refreshKey: ${JWT_REFRESH_KEY:vD/tpfdCt2JiqNX5VyXEx0SyxYFC06DjB9GoY6bER6lgyA2qlAGgCegeB9ZB+tfOf5yfw8ZX/SaZNkluZxtXZQ==}
+
+# OTP Configuration
+otp:
+  expiry-minutes: ${OTP_EXPIRY_MINUTES:5}
+  verify-key-expiry-minutes: 5
+  max-send-count: 5
+  resend-limit-minutes: 5
+  otp-length: 6
+
+# API Documentation
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    url: /v3/api-docs/demo-system
+    operationsSorter: method
+    tagsSorter: alpha
+
+openapi:
+  service:
+    api-docs: demo-system
+    server: http://localhost:${server.port}
+    title: Demo System API
+    version: 1.0.0
+    description: E-Commerce System REST API Documentation
+
+# Logging - Development (more verbose)
+logging:
+  level:
+    root: INFO
+    com.training.demo: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/demo-system-dev.log
+    max-size: 10MB
+    max-history: 30
+
+# Actuator endpoints for development
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env,loggers
+  endpoint:
+    health:
+      show-details: always

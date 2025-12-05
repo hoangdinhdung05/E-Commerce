@@ -1,0 +1,133 @@
+# Staging Environment Configuration
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    include-message: always
+    include-stacktrace: on-param
+
+spring:
+  application:
+    name: demo-system
+
+  # Database - Staging
+  datasource:
+    url: ${DB_URL:jdbc:mysql://staging-db:3306/demo-system-staging}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 15
+      minimum-idle: 8
+      connection-timeout: 25000
+      idle-timeout: 450000
+      max-lifetime: 1500000
+
+  # JPA Configuration - Staging
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        jdbc:
+          batch_size: 30
+
+  # Redis - Staging
+  data:
+    redis:
+      host: ${REDIS_HOST:staging-redis}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+      timeout: 60000ms
+
+  # RabbitMQ - Staging
+  rabbitmq:
+    host: ${RABBITMQ_HOST:staging-rabbitmq}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME}
+    password: ${RABBITMQ_PASSWORD}
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: 5
+        retry:
+          enabled: true
+          initial-interval: 4000
+          max-attempts: 4
+
+  # Mail Config - Staging
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  # File Upload
+  servlet:
+    multipart:
+      max-file-size: 8MB
+      max-request-size: 8MB
+
+# JWT Configuration
+jwt:
+  expiryMinutes: ${JWT_EXPIRY_MINUTES:30}
+  expiryDay: ${JWT_EXPIRY_DAY:7}
+  accessKey: ${JWT_ACCESS_KEY}
+  refreshKey: ${JWT_REFRESH_KEY}
+
+# OTP Configuration
+otp:
+  expiry-minutes: ${OTP_EXPIRY_MINUTES:5}
+  verify-key-expiry-minutes: 7
+  max-send-count: 4
+  resend-limit-minutes: 7
+  otp-length: 6
+
+# API Documentation - Enabled in staging for testing
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    url: /v3/api-docs/demo-system
+
+openapi:
+  service:
+    api-docs: demo-system
+    server: ${API_BASE_URL:http://staging.demo-system.com}
+    title: Demo System API (Staging)
+    version: 1.0.0
+
+# Logging - Staging (moderate verbosity)
+logging:
+  level:
+    root: INFO
+    com.training.demo: DEBUG
+    org.springframework.web: INFO
+    org.springframework.security: INFO
+    org.hibernate.SQL: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: /var/log/demo-system/staging.log
+    max-size: 20MB
+    max-history: 60
+
+# Actuator endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env
+  endpoint:
+    health:
+      show-details: always
