@@ -1,0 +1,278 @@
+<!-- Modern E-commerce Header -->
+<header class="modern-header">
+  <!-- Top Bar -->
+  <div class="header-top">
+    <div class="container">
+      <div class="top-content">
+        <div class="contact-info">
+          <span><i class="fas fa-phone"></i> +84 123 456 789</span>
+          <span><i class="fas fa-envelope"></i> contact@demostore.com</span>
+        </div>
+        <div class="top-actions">
+          <div class="language-selector">
+            <select>
+              <option value="vi">Tiếng Việt</option>
+              <option value="en">English</option>
+            </select>
+          </div>
+          <div class="currency-selector">
+            <select>
+              <option value="vnd">VND</option>
+              <option value="usd">USD</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Header -->
+  <div class="header-main">
+    <div class="container">
+      <div class="header-content">
+        <!-- Logo -->
+        <div class="logo-section">
+          <a (click)="navigateToHome()" class="logo">
+            <!-- <img src="/assets/logo.png" alt="Demo Store" class="logo-img" /> -->
+            <span class="logo-text">Demo Store</span>
+          </a>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-section">
+          <div class="search-container">
+            <div class="search-input-wrapper">
+              <input 
+                type="text" 
+                placeholder="Tìm kiếm sản phẩm..." 
+                class="search-input"
+                #searchInput
+                (input)="onSearchInput(searchInput.value)"
+                (keyup.enter)="performSearch(searchInput.value)"
+                (focus)="searchInput.value && (showSuggestions = true)"
+              />
+              <button class="search-btn" (click)="performSearch(searchInput.value)">
+                <i class="fas fa-search" *ngIf="!isSearching"></i>
+                <i class="fas fa-spinner fa-spin" *ngIf="isSearching"></i>
+              </button>
+            </div>
+
+            <!-- Search Suggestions Dropdown -->
+            <div class="search-suggestions" *ngIf="showSuggestions && searchSuggestions.length > 0">
+              <div 
+                *ngFor="let product of searchSuggestions" 
+                class="suggestion-item"
+                (click)="selectSuggestion(product)"
+              >
+                <img 
+                  [src]="getProductImageUrl(product)" 
+                  [alt]="product.name"
+                  class="suggestion-image"
+                />
+                <div class="suggestion-info">
+                  <div class="suggestion-name">{{ product.name }}</div>
+                  <div class="suggestion-price">${{ product.price }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- No results message -->
+            <div class="search-suggestions" *ngIf="showSuggestions && searchSuggestions.length === 0 && !isSearching && searchInput.value">
+              <div class="no-results">
+                <i class="fas fa-search"></i>
+                <span>Không tìm thấy sản phẩm</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Header Actions -->
+        <div class="header-actions">
+          <!-- Wishlist -->
+          <div class="action-item">
+            <button class="action-btn" title="Yêu thích">
+              <i class="far fa-heart"></i>
+              <span class="badge">0</span>
+            </button>
+          </div>
+
+          <!-- Cart -->
+          <div class="action-item cart-section">
+            <button 
+              class="action-btn cart-btn" 
+              title="Giỏ hàng"
+              (click)="toggleCartDropdown()"
+            >
+              <i class="fas fa-shopping-bag"></i>
+              <span class="badge" *ngIf="cartCount > 0">{{ cartCount }}</span>
+            </button>
+
+            <!-- Cart Dropdown -->
+            <div class="cart-dropdown" *ngIf="isCartDropdownOpen" [class.show]="isCartDropdownOpen">
+              <!-- Loading State -->
+              <div class="cart-loading" *ngIf="isLoadingCart">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Đang tải...</p>
+              </div>
+
+              <!-- Empty Cart -->
+              <div class="cart-empty" *ngIf="!isLoadingCart && (!cart || !cart.items || cart.items.length === 0)">
+                <i class="fas fa-shopping-cart"></i>
+                <p>Giỏ hàng trống</p>
+              </div>
+
+              <!-- Cart Items -->
+              <div class="cart-content" *ngIf="!isLoadingCart && cart && cart.items && cart.items.length > 0">
+                <div class="cart-header">
+                  <h4>Giỏ hàng ({{ cartCount }} sản phẩm)</h4>
+                </div>
+
+                <div class="cart-items">
+                  <div *ngFor="let item of cart.items" class="cart-item-mini">
+                    <img [src]="getCartItemImageUrl(item)" [alt]="item.productName" class="cart-item-image" />
+                    <div class="cart-item-info">
+                      <h5>{{ item.productName }}</h5>
+                      <p class="quantity">Số lượng: {{ item.quantity }}</p>
+                      <p class="price">{{ formatCurrency(item.subtotal) }}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="cart-footer">
+                  <div class="cart-total">
+                    <span>Tổng cộng:</span>
+                    <span class="total-amount">{{ formatCurrency(getCartTotal()) }}</span>
+                  </div>
+                  <button class="btn-view-cart" (click)="navigateToCart()">
+                    Xem giỏ hàng
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- User Account -->
+          <div class="action-item user-menu" *ngIf="!isLoggedIn">
+            <button class="action-btn" (click)="navigateToLogin()">
+              <i class="far fa-user"></i>
+              <span class="action-text">Đăng nhập</span>
+            </button>
+          </div>
+
+          <div class="action-item user-menu"
+              *ngIf="isLoggedIn"
+              (mouseenter)="openUserMenu()"
+              (mouseleave)="closeUserMenu()">
+
+            <button class="action-btn user-btn"
+                    (click)="toggleUserMenu($event)"
+                    aria-haspopup="true"
+                    [attr.aria-expanded]="isMenuOpen">
+              <div class="user-avatar" *ngIf="avatarUrl; else userInitials">
+                <img [src]="avatarUrl" [alt]="user?.firstName" />
+              </div>
+              <ng-template #userInitials>
+                <div class="user-initial">{{ userInitial }}</div>
+              </ng-template>
+              <span class="user-name">{{ user?.firstName || 'User' }}</span>
+              <i class="fas fa-chevron-down" [class.rotated]="isMenuOpen"></i>
+            </button>
+
+            <!-- Dropdown -->
+            <div class="user-dropdown"
+                [class.show]="isMenuOpen"
+                role="menu"
+                (click)="$event.stopPropagation()">
+              <div class="user-info">
+                <div class="user-avatar-large" *ngIf="avatarUrl; else userInitialsLarge">
+                  <img [src]="avatarUrl" [alt]="user?.firstName" />
+                </div>
+                <ng-template #userInitialsLarge>
+                  <div class="user-initial-large">{{ userInitial }}</div>
+                </ng-template>
+                <div class="user-details">
+                  <h4>{{ user?.firstName }} {{ user?.lastName }}</h4>
+                  <p>{{ user?.email }}</p>
+                </div>
+              </div>
+
+              <div class="dropdown-divider"></div>
+                <ul class="user-dropdown-list">
+                  <li><button type="button" class="dropdown-link" (click)="onAction('profile')"><i class="fas fa-user"></i> Thông tin cá nhân</button></li>
+                  <li><button type="button" class="dropdown-link" (click)="onAction('orders')"><i class="fas fa-shopping-cart"></i> Đơn hàng của tôi</button></li>
+                  <li><button type="button" class="dropdown-link" (click)="onAction('changePassword')"><i class="fas fa-key"></i> Đổi mật khẩu</button></li>
+                  <li><button type="button" class="dropdown-link logout-btn" (click)="onAction('logout')"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button></li>
+                </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Menu -->
+  <nav class="main-navigation">
+    <div class="container">
+      <div class="nav-content">
+        <!-- Categories Menu -->
+        <div class="categories-menu" 
+             (mouseenter)="onCategoriesMouseEnter()" 
+             (mouseleave)="onCategoriesMouseLeave()">
+          <button class="categories-btn" (click)="toggleCategoriesMenu()">
+            <i class="fas fa-bars"></i>
+            <span>Danh mục</span>
+            <i class="fas fa-chevron-down" [class.rotated]="isCategoriesOpen"></i>
+          </button>
+          
+          <!-- Categories Dropdown -->
+          <div class="categories-dropdown" [class.show]="isCategoriesOpen">
+            <div class="dropdown-header">
+              <h4>Danh mục sản phẩm</h4>
+            </div>
+            <div class="categories-list" *ngIf="!isLoadingCategories; else loadingTemplate">
+              <a *ngFor="let category of categories" 
+                 class="category-item"
+                 (click)="navigateToCategoryById(category.id)">
+                <i class="fas fa-tag category-icon"></i>
+                <span class="category-name">{{ category.name }}</span>
+                <i class="fas fa-chevron-right arrow-icon"></i>
+              </a>
+            </div>
+            <ng-template #loadingTemplate>
+              <div class="loading-categories">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Đang tải danh mục...</span>
+              </div>
+            </ng-template>
+            <div class="dropdown-footer">
+              <a (click)="navigateToCategory()" class="view-all-btn">
+                Xem tất cả danh mục
+                <i class="fas fa-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Main Menu -->
+        <ul class="main-menu">
+          <li><a (click)="navigateToHome()">Trang chủ</a></li>
+          <li><a (click)="navigateToCategory()">Sản phẩm</a></li>
+          <li><a href="#">Khuyến mãi</a></li>
+          <li><a (click)="navigateToAbout()">Về chúng tôi</a></li>
+          <li><a (click)="navigateToContact()">Liên hệ</a></li>
+        </ul>
+
+        <!-- Contact Info -->
+        <div class="nav-contact">
+          <div class="hotline">
+            <i class="fas fa-phone-alt"></i>
+            <div class="hotline-info">
+              <span class="hotline-label">Hotline</span>
+              <span class="hotline-number">1900 1234</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+</header>

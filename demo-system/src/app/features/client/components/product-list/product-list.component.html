@@ -1,0 +1,230 @@
+<div class="product-list-container">
+  <!-- Header with view controls -->
+  <div class="list-header">
+    <div class="results-info">
+      <ng-container *ngIf="!isSearching; else searchResultHeader">
+        <h3>Tất cả sản phẩm ({{ displayedProducts.length }})</h3>
+      </ng-container>
+      <ng-template #searchResultHeader>
+        <h3>Kết quả tìm kiếm cho "{{ searchQuery }}" ({{ displayedProducts.length }})</h3>
+      </ng-template>
+
+      <div *ngIf="isLoading" class="loading-info">
+        <i class="fas fa-spinner fa-spin"></i> Đang tải...
+      </div>
+    </div>
+
+    <div class="view-controls">
+      <button 
+        class="view-btn" 
+        [class.active]="viewMode === 'grid'"
+        (click)="viewMode = 'grid'"
+      >
+        <i class="fas fa-th"></i>
+      </button>
+      <button 
+        class="view-btn" 
+        [class.active]="viewMode === 'list'"
+        (click)="viewMode = 'list'"
+      >
+        <i class="fas fa-list"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- No products message -->
+  <div *ngIf="displayedProducts.length === 0 && !isLoading" class="no-products">
+    <i class="fas fa-search"></i>
+    <h4>Không tìm thấy sản phẩm nào</h4>
+    <p>Thử thay đổi bộ lọc hoặc tìm kiếm với từ khóa khác</p>
+  </div>
+
+  <!-- Products Grid View -->
+   <div>
+
+     <div *ngIf="viewMode === 'grid' && displayedProducts.length > 0" class="products-grid">
+       <div *ngFor="let product of displayedProducts" class="product-card">
+         <!-- Sale Badge - hidden for now since API doesn't support it -->
+         <!-- <div *ngIf="product.isOnSale" class="sale-badge">
+           -{{ product.salePercentage }}%
+         </div> -->
+         
+         <!-- Out of Stock Badge -->
+         <div *ngIf="!isProductInStock(product)" class="stock-badge">
+           Hết hàng
+         </div>
+   
+         <!-- Product Image -->
+         <div class="product-image" (click)="viewProductDetails(product)">
+           <img [src]="getProductImageUrl(product)" [alt]="product.name" />
+           <div class="image-overlay">
+             <button class="quick-view-btn">
+               <i class="fas fa-eye"></i> Xem nhanh
+             </button>
+           </div>
+         </div>
+   
+         <!-- Product Info -->
+         <div class="product-info">
+           <div class="product-category">{{ product.category?.name || 'Chưa phân loại' }}</div>
+           <h4 class="product-name" (click)="viewProductDetails(product)">
+             {{ product.name }}
+           </h4>
+           <p class="product-description">{{ product.description || 'Không có mô tả' }}</p>
+           
+           <!-- Rating - using default since API doesn't provide it -->
+           <div class="product-rating">
+             <div class="stars">
+               <i 
+                 *ngFor="let star of getStarArray(); let i = index"
+                 class="fas fa-star"
+                 [class.filled]="star === 1"
+               ></i>
+             </div>
+             <span class="rating-text">4.5 (0 đánh giá)</span>
+           </div>
+   
+           <!-- Price -->
+           <div class="product-price">
+             <span class="current-price">{{ formatPrice(product.price) }}</span>
+             <!-- <span *ngIf="product.originalPrice" class="original-price">
+               {{ formatPrice(product.originalPrice) }}
+             </span> -->
+           </div>
+   
+           <!-- Actions -->
+           <div class="product-actions">
+             <button 
+               class="btn-add-cart" 
+               [disabled]="!isProductInStock(product)"
+               (click)="addToCart(product)"
+             >
+               <i class="fas fa-shopping-cart"></i>
+               {{ isProductInStock(product) ? 'Thêm vào giỏ' : 'Hết hàng' }}
+             </button>
+           </div>
+         </div>
+       </div>
+     </div>
+     <!-- Products List View -->
+     <div *ngIf="viewMode === 'list' && displayedProducts.length > 0" class="products-list">
+       <div *ngFor="let product of displayedProducts" class="product-item">
+         <!-- Sale Badge - hidden for now since API doesn't support it -->
+         <!-- <div *ngIf="product.isOnSale" class="sale-badge">
+           -{{ product.salePercentage }}%
+         </div> -->
+         
+         <!-- Out of Stock Badge -->
+         <div *ngIf="!isProductInStock(product)" class="stock-badge">
+           Hết hàng
+         </div>
+   
+         <!-- Product Image -->
+         <div class="product-image" (click)="viewProductDetails(product)">
+           <img [src]="getProductImageUrl(product)" [alt]="product.name" />
+         </div>
+   
+         <!-- Product Details -->
+         <div class="product-details">
+           <div class="product-main-info">
+             <div class="product-category">{{ product.category?.name || 'Chưa phân loại' }}</div>
+             <h4 class="product-name" (click)="viewProductDetails(product)">
+               {{ product.name }}
+             </h4>
+             <p class="product-description">{{ product.description || 'Không có mô tả' }}</p>
+             
+             <!-- Rating - using default since API doesn't provide it -->
+             <div class="product-rating">
+               <div class="stars">
+                 <i 
+                   *ngFor="let star of getStarArray(); let i = index"
+                   class="fas fa-star"
+                   [class.filled]="star === 1"
+                 ></i>
+               </div>
+               <span class="rating-text">4.5 (0 đánh giá)</span>
+             </div>
+           </div>
+   
+           <div class="product-price-action">
+             <!-- Price -->
+             <div class="product-price">
+               <span class="current-price">{{ formatPrice(product.price) }}</span>
+               <!-- <span *ngIf="product.originalPrice" class="original-price">
+                 {{ formatPrice(product.originalPrice) }}
+               </span> -->
+             </div>
+   
+             <!-- Actions -->
+             <div class="product-actions">
+               <button 
+                 class="btn-add-cart" 
+                 [disabled]="!isProductInStock(product)"
+                 (click)="addToCart(product)"
+               >
+                 <i class="fas fa-shopping-cart"></i>
+                 {{ isProductInStock(product) ? 'Thêm vào giỏ' : 'Hết hàng' }}
+               </button>
+             </div>
+           </div>
+         </div>
+       </div>
+     </div>
+          
+     <!-- Phân trang - hiện khi có dữ liệu và không phải đang search -->
+     <div *ngIf="!isSearching && totalPages > 0" class="pagination-container">
+       <div class="pagination-info">
+         <span>Hiển thị {{ displayedProducts.length }} / {{ totalElements }} sản phẩm</span>
+       </div>
+       
+       <nav class="pagination-nav">
+         <ul class="pagination">
+           <!-- Previous button -->
+           <li class="page-item" [class.disabled]="currentPage === 0">
+             <button 
+               class="page-link" 
+               (click)="previousPage()" 
+               [disabled]="currentPage === 0"
+               title="Trang trước"
+             >
+               <i class="fas fa-chevron-left"></i>
+             </button>
+           </li>
+           
+           <!-- Page numbers -->
+           <li 
+             class="page-item" 
+             *ngFor="let page of getPageNumbers()" 
+             [class.active]="currentPage === page"
+             [class.ellipsis]="page === -1"
+           >
+             <button 
+               *ngIf="page !== -1" 
+               class="page-link" 
+               (click)="goToPage(page)"
+             >
+               {{ page + 1 }}
+             </button>
+             <span *ngIf="page === -1" class="page-link ellipsis-text">...</span>
+           </li>
+           
+           <!-- Next button -->
+           <li class="page-item" [class.disabled]="currentPage >= totalPages - 1">
+             <button 
+               class="page-link" 
+               (click)="nextPage()" 
+               [disabled]="currentPage >= totalPages - 1"
+               title="Trang sau"
+             >
+               <i class="fas fa-chevron-right"></i>
+             </button>
+           </li>
+         </ul>
+       </nav>
+       
+       <div class="page-indicator">
+         <span>Trang {{ currentPage + 1 }} / {{ totalPages }}</span>
+       </div>
+     </div>
+   </div>
+</div>

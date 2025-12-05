@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xác nhận đơn hàng</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #007bff;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #007bff;
+            margin: 0;
+            font-size: 28px;
+        }
+        .order-info {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .order-info p {
+            margin: 10px 0;
+        }
+        .order-info strong {
+            color: #007bff;
+        }
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .items-table th,
+        .items-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .items-table th {
+            background-color: #007bff;
+            color: white;
+            font-weight: 600;
+        }
+        .items-table tr:last-child td {
+            border-bottom: none;
+        }
+        .total-section {
+            text-align: right;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #dee2e6;
+        }
+        .total-section .total {
+            font-size: 24px;
+            font-weight: bold;
+            color: #28a745;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .success-icon {
+            text-align: center;
+            font-size: 60px;
+            color: #28a745;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="success-icon">✓</div>
+        
+        <div class="header">
+            <h1>Xác nhận đơn hàng</h1>
+            <p>Cảm ơn bạn đã đặt hàng tại Demo Store!</p>
+        </div>
+
+        <div class="order-info">
+            <p><strong>Mã đơn hàng:</strong> <span th:text="${orderNumber}"></span></p>
+            <p><strong>Ngày đặt:</strong> <span th:text="${createdAt}"></span></p>
+            <p><strong>Người nhận:</strong> <span th:text="${receiverName}"></span></p>
+            <p><strong>Số điện thoại:</strong> <span th:text="${phoneNumber}"></span></p>
+            <p><strong>Địa chỉ giao hàng:</strong> <span th:text="${shippingAddress}"></span></p>
+            <p><strong>Phương thức thanh toán:</strong> <span th:text="${paymentMethod}"></span></p>
+        </div>
+
+        <h3>Chi tiết đơn hàng:</h3>
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>Sản phẩm</th>
+                    <th>Số lượng</th>
+                    <th>Đơn giá</th>
+                    <th>Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="item : ${items}">
+                    <td th:text="${item.productName}"></td>
+                    <td th:text="${item.quantity}"></td>
+                    <td th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT')} + '₫'"></td>
+                    <td th:text="${#numbers.formatDecimal(item.subtotal, 0, 'COMMA', 0, 'POINT')} + '₫'"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="total-section">
+            <p><strong>Tổng cộng:</strong> <span class="total" th:text="${#numbers.formatDecimal(totalAmount, 0, 'COMMA', 0, 'POINT')} + '₫'"></span></p>
+        </div>
+
+        <div th:if="${note}" style="margin-top: 20px; padding: 15px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+            <strong>Ghi chú:</strong> <span th:text="${note}"></span>
+        </div>
+
+        <div class="footer">
+            <p>Chúng tôi sẽ liên hệ với bạn sớm nhất để xác nhận đơn hàng.</p>
+            <p>Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ: <a href="mailto:support@demostore.com">support@demostore.com</a></p>
+            <p style="margin-top: 20px;">© 2025 Demo Store. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

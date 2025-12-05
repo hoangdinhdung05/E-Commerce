@@ -1,0 +1,223 @@
+<div class="checkout-container">
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>Đang tải thông tin...</p>
+  </div>
+
+  <!-- Checkout Content -->
+  <div *ngIf="!isLoading && cart" class="checkout-content">
+    <div class="container">
+      <div class="row">
+        <!-- Left Column: Checkout Form -->
+        <div class="col-lg-7">
+          <div class="checkout-form-card">
+            <h2 class="section-title">Thông tin giao hàng</h2>
+            
+            <form [formGroup]="checkoutForm" (ngSubmit)="onSubmit()">
+              <!-- Receiver Name -->
+              <div class="form-group">
+                <label for="receiverName">
+                  Họ và tên người nhận <span class="required">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="receiverName"
+                  class="form-control"
+                  formControlName="receiverName"
+                  placeholder="Nhập họ tên người nhận"
+                  [class.is-invalid]="hasError('receiverName', 'required')"
+                />
+                <div class="invalid-feedback" *ngIf="hasError('receiverName', 'required')">
+                  Vui lòng nhập họ tên người nhận
+                </div>
+                <div class="invalid-feedback" *ngIf="hasError('receiverName', 'maxlength')">
+                  Họ tên không được vượt quá 200 ký tự
+                </div>
+              </div>
+
+              <!-- Phone Number -->
+              <div class="form-group">
+                <label for="phoneNumber">
+                  Số điện thoại <span class="required">*</span>
+                </label>
+                <input
+                  type="tel"
+                  id="phoneNumber"
+                  class="form-control"
+                  formControlName="phoneNumber"
+                  placeholder="Nhập số điện thoại (10-11 số)"
+                  [class.is-invalid]="hasError('phoneNumber', 'required') || hasError('phoneNumber', 'pattern')"
+                />
+                <div class="invalid-feedback" *ngIf="hasError('phoneNumber', 'required')">
+                  Vui lòng nhập số điện thoại
+                </div>
+                <div class="invalid-feedback" *ngIf="hasError('phoneNumber', 'pattern')">
+                  Số điện thoại phải là 10-11 chữ số
+                </div>
+              </div>
+
+              <!-- Shipping Address -->
+              <div class="form-group">
+                <label for="shippingAddress">
+                  Địa chỉ giao hàng <span class="required">*</span>
+                </label>
+                <textarea
+                  id="shippingAddress"
+                  class="form-control"
+                  formControlName="shippingAddress"
+                  rows="3"
+                  placeholder="Nhập địa chỉ chi tiết (số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố)"
+                  [class.is-invalid]="hasError('shippingAddress', 'required')"
+                ></textarea>
+                <div class="invalid-feedback" *ngIf="hasError('shippingAddress', 'required')">
+                  Vui lòng nhập địa chỉ giao hàng
+                </div>
+                <div class="invalid-feedback" *ngIf="hasError('shippingAddress', 'maxlength')">
+                  Địa chỉ không được vượt quá 500 ký tự
+                </div>
+              </div>
+
+              <!-- Payment Method -->
+              <div class="form-group">
+                <label>
+                  Phương thức thanh toán <span class="required">*</span>
+                </label>
+                <div class="payment-methods">
+                  <div 
+                    *ngFor="let method of paymentMethods" 
+                    class="payment-method-option"
+                    [class.selected]="checkoutForm.get('paymentMethod')?.value === method.value"
+                  >
+                    <input
+                      type="radio"
+                      [id]="'payment-' + method.value"
+                      [value]="method.value"
+                      formControlName="paymentMethod"
+                    />
+                    <label [for]="'payment-' + method.value">
+                      {{ method.label }}
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Note -->
+              <div class="form-group">
+                <label for="note">Ghi chú (tùy chọn)</label>
+                <textarea
+                  id="note"
+                  class="form-control"
+                  formControlName="note"
+                  rows="3"
+                  placeholder="Ghi chú thêm về đơn hàng (giao giờ hành chính, không gọi chuông...)"
+                ></textarea>
+                <small class="form-text text-muted">
+                  Tối đa 1000 ký tự
+                </small>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="form-actions">
+                <button 
+                  type="button" 
+                  class="btn btn-secondary" 
+                  (click)="backToCart()"
+                  [disabled]="isSubmitting"
+                >
+                  <i class="fas fa-arrow-left"></i> Quay lại giỏ hàng
+                </button>
+                <button 
+                  type="submit" 
+                  class="btn btn-primary"
+                  [disabled]="isSubmitting || checkoutForm.invalid"
+                >
+                  <span *ngIf="!isSubmitting">
+                    <i class="fas fa-check"></i> Đặt hàng
+                  </span>
+                  <span *ngIf="isSubmitting">
+                    <i class="fas fa-spinner fa-spin"></i> Đang xử lý...
+                  </span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Right Column: Order Summary -->
+        <div class="col-lg-5">
+          <div class="order-summary-card">
+            <h3 class="section-title">Thông tin đơn hàng</h3>
+            
+            <!-- Cart Items -->
+            <div class="cart-items">
+              <div 
+                *ngFor="let item of cart.items" 
+                class="cart-item"
+              >
+                <div class="item-image">
+                  <img 
+                    [src]="getProductImageUrl(item)" 
+                    [alt]="item.productName"
+                  />
+                </div>
+                <div class="item-details">
+                  <h4 class="item-name">{{ item.productName }}</h4>
+                  <p class="item-quantity">Số lượng: {{ item.quantity }}</p>
+                  <p class="item-price">{{ formatCurrency(item.price) }}</p>
+                </div>
+                <div class="item-subtotal">
+                  {{ formatCurrency(item.subtotal) }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Order Total -->
+            <div class="order-total">
+              <div class="total-row subtotal">
+                <span>Tạm tính:</span>
+                <span>{{ formatCurrency(getTotalAmount()) }}</span>
+              </div>
+              <div class="total-row shipping">
+                <span>Phí vận chuyển:</span>
+                <span class="text-success">Miễn phí</span>
+              </div>
+              <hr />
+              <div class="total-row grand-total">
+                <span>Tổng cộng:</span>
+                <span class="total-amount">{{ formatCurrency(getTotalAmount()) }}</span>
+              </div>
+            </div>
+
+            <!-- Payment Info -->
+            <div class="payment-info" *ngIf="checkoutForm.get('paymentMethod')?.value !== 'COD'">
+              <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                Bạn sẽ được chuyển đến trang thanh toán sau khi đặt hàng thành công.
+              </div>
+            </div>
+
+            <!-- Policies -->
+            <div class="policies">
+              <ul>
+                <li><i class="fas fa-check"></i> Miễn phí vận chuyển cho đơn hàng từ 500.000₫</li>
+                <li><i class="fas fa-check"></i> Đổi trả miễn phí trong 7 ngày</li>
+                <li><i class="fas fa-check"></i> Bảo hành chính hãng</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty Cart Message -->
+  <div *ngIf="!isLoading && (!cart || cart.totalItems === 0)" class="empty-cart">
+    <i class="fas fa-shopping-cart"></i>
+    <h3>Giỏ hàng trống</h3>
+    <p>Vui lòng thêm sản phẩm vào giỏ hàng trước khi thanh toán</p>
+    <button class="btn btn-primary" routerLink="/products">
+      <i class="fas fa-shopping-bag"></i> Tiếp tục mua sắm
+    </button>
+  </div>
+</div>

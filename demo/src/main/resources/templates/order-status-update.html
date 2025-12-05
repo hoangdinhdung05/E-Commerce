@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cập nhật trạng thái đơn hàng</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #17a2b8;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #17a2b8;
+            margin: 0;
+            font-size: 28px;
+        }
+        .status-icon {
+            text-align: center;
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+        .status-icon.shipped {
+            color: #17a2b8;
+        }
+        .status-icon.delivered {
+            color: #28a745;
+        }
+        .status-icon.cancelled {
+            color: #dc3545;
+        }
+        .order-info {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .order-info p {
+            margin: 10px 0;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            margin: 10px 0;
+        }
+        .status-badge.shipped {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        .status-badge.delivered {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-badge.cancelled {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .timeline {
+            margin: 30px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+        }
+        .timeline-item {
+            position: relative;
+            padding-left: 30px;
+            padding-bottom: 20px;
+            border-left: 2px solid #dee2e6;
+        }
+        .timeline-item:last-child {
+            border-left: none;
+            padding-bottom: 0;
+        }
+        .timeline-item::before {
+            content: '●';
+            position: absolute;
+            left: -6px;
+            color: #17a2b8;
+            font-size: 12px;
+        }
+        .timeline-item.active::before {
+            color: #28a745;
+            font-size: 16px;
+        }
+        .timeline-date {
+            color: #6c757d;
+            font-size: 12px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="status-icon" th:classappend="${status == 'SHIPPED' ? 'shipped' : (status == 'DELIVERED' ? 'delivered' : 'cancelled')}">
+            <span th:if="${status == 'SHIPPED'}">🚚</span>
+            <span th:if="${status == 'DELIVERED'}">📦</span>
+            <span th:if="${status == 'CANCELLED'}">❌</span>
+        </div>
+        
+        <div class="header">
+            <h1>Cập nhật đơn hàng</h1>
+            <p th:text="${statusMessage}">Trạng thái đơn hàng đã được cập nhật</p>
+        </div>
+
+        <div class="order-info">
+            <p><strong>Mã đơn hàng:</strong> <span th:text="${orderNumber}"></span></p>
+            <p><strong>Trạng thái:</strong> 
+                <span class="status-badge" th:classappend="${status == 'SHIPPED' ? 'shipped' : (status == 'DELIVERED' ? 'delivered' : 'cancelled')}" 
+                      th:text="${statusText}">
+                </span>
+            </p>
+            <p><strong>Ngày cập nhật:</strong> <span th:text="${updatedAt}"></span></p>
+        </div>
+
+        <!-- Shipped Status -->
+        <div th:if="${status == 'SHIPPED'}" style="background-color: #d1ecf1; border-left: 4px solid #17a2b8; padding: 15px; border-radius: 4px; margin: 20px 0;">
+            <h4 style="margin-top: 0; color: #0c5460;">Đơn hàng đang được vận chuyển</h4>
+            <p>Đơn hàng của bạn đã được giao cho đơn vị vận chuyển và đang trên đường giao đến bạn.</p>
+            <p th:if="${trackingNumber}">
+                <strong>Mã vận đơn:</strong> <span th:text="${trackingNumber}"></span>
+            </p>
+            <p th:if="${estimatedDelivery}">
+                <strong>Dự kiến giao hàng:</strong> <span th:text="${estimatedDelivery}"></span>
+            </p>
+        </div>
+
+        <!-- Delivered Status -->
+        <div th:if="${status == 'DELIVERED'}" style="background-color: #d4edda; border-left: 4px solid #28a745; padding: 15px; border-radius: 4px; margin: 20px 0;">
+            <h4 style="margin-top: 0; color: #155724;">Giao hàng thành công!</h4>
+            <p>Đơn hàng đã được giao thành công. Cảm ơn bạn đã mua sắm tại Demo Store!</p>
+            <p>Nếu bạn hài lòng với sản phẩm, đừng quên để lại đánh giá nhé!</p>
+        </div>
+
+        <!-- Cancelled Status -->
+        <div th:if="${status == 'CANCELLED'}" style="background-color: #f8d7da; border-left: 4px solid #dc3545; padding: 15px; border-radius: 4px; margin: 20px 0;">
+            <h4 style="margin-top: 0; color: #721c24;">Đơn hàng đã bị hủy</h4>
+            <p th:text="${cancelReason}">Đơn hàng của bạn đã bị hủy.</p>
+            <p>Nếu bạn đã thanh toán, số tiền sẽ được hoàn lại trong vòng 3-5 ngày làm việc.</p>
+        </div>
+
+        <!-- Order Timeline -->
+        <div class="timeline" th:if="${status != 'CANCELLED'}">
+            <h4>Tiến trình đơn hàng:</h4>
+            <div class="timeline-item active">
+                <strong>Đã đặt hàng</strong>
+                <div class="timeline-date" th:text="${createdAt}"></div>
+            </div>
+            <div class="timeline-item" th:classappend="${status == 'PROCESSING' or status == 'SHIPPED' or status == 'DELIVERED' ? 'active' : ''}">
+                <strong>Đang xử lý</strong>
+                <div class="timeline-date" th:if="${processingAt}" th:text="${processingAt}"></div>
+            </div>
+            <div class="timeline-item" th:classappend="${status == 'SHIPPED' or status == 'DELIVERED' ? 'active' : ''}">
+                <strong>Đang vận chuyển</strong>
+                <div class="timeline-date" th:if="${shippedAt}" th:text="${shippedAt}"></div>
+            </div>
+            <div class="timeline-item" th:classappend="${status == 'DELIVERED' ? 'active' : ''}">
+                <strong>Đã giao hàng</strong>
+                <div class="timeline-date" th:if="${deliveredAt}" th:text="${deliveredAt}"></div>
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="#" class="button">Xem chi tiết đơn hàng</a>
+        </div>
+
+        <div class="footer">
+            <p>Cảm ơn bạn đã tin tưởng Demo Store!</p>
+            <p>Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ: <a href="mailto:support@demostore.com">support@demostore.com</a></p>
+            <p style="margin-top: 20px;">© 2025 Demo Store. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

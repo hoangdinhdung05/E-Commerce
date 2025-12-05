@@ -1,0 +1,69 @@
+<section class="vh-100">
+  <div class="container py-5 h-100">
+    <div class="row d-flex justify-content-center align-items-center h-100">
+      <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+        <div class="card shadow-lg" style="border-radius: 1rem;">
+          <div class="card-body p-5 text-center">
+
+            <h3 class="mb-5">Đăng kí</h3>
+
+            <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+
+              <!-- Username -->
+              <div class="form-group mb-4 text-start">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" id="username" class="form-control form-control-lg" formControlName="username" />
+                <div class="error" *ngIf="registerForm.get('username')?.touched && registerForm.get('username')?.hasError('required')">
+                  Vui lòng nhập tên đăng nhập
+                </div>
+                <div class="error" *ngIf="registerForm.get('username')?.touched && registerForm.get('username')?.hasError('minlength')">
+                  Tên đăng nhập ít nhất 6 ký tự
+                </div>
+                <div class="error" *ngIf="registerForm.get('username')?.errors?.['serverError']">
+                  {{ registerForm.get('username')?.errors?.['serverError'] }}
+                </div>
+              </div>
+
+              <!-- Email -->
+              <div class="form-group mb-4 text-start">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" id="email" class="form-control form-control-lg" formControlName="email" />
+                <div class="error" *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.hasError('required')">
+                  Vui lòng nhập email
+                </div>
+                <div class="error" *ngIf="registerForm.get('email')?.touched && registerForm.get('email')?.hasError('email')">
+                  Email không đúng định dạng
+                </div>
+                <div class="error" *ngIf="registerForm.get('email')?.errors?.['serverError']">
+                  {{ registerForm.get('email')?.errors?.['serverError'] }}
+                </div>
+              </div>
+
+              <!-- Password -->
+              <div class="form-group mb-4 text-start">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" id="password" class="form-control form-control-lg" formControlName="password" />
+                <div class="error" *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.hasError('required')">
+                  Vui lòng nhập mật khẩu
+                </div>
+                <div class="error" *ngIf="registerForm.get('password')?.touched && registerForm.get('password')?.hasError('minlength')">
+                  Mật khẩu ít nhất 6 ký tự
+                </div>
+                <div class="error" *ngIf="registerForm.get('password')?.errors?.['serverError']">
+                  {{ registerForm.get('password')?.errors?.['serverError'] }}
+                </div>
+              </div>
+
+              <button class="btn btn-primary btn-lg w-100 mb-4" type="submit">
+                Đăng kí
+              </button>
+            </form>
+
+            <p>Đã có tài khoản ? <a routerLink="/auth/login">Đăng nhập</a></p>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

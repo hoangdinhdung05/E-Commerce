@@ -1,0 +1,345 @@
+<!-- Admin Orders Management -->
+<div class="dashboard-container">
+  <div class="container-fluid">
+    <h2 class="mb-4">Quản lý đơn hàng</h2>
+
+    <!-- Thanh tìm kiếm và nút -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+      <div class="d-flex gap-2 flex-grow-1" style="max-width: 600px;">
+        <input 
+          type="text" 
+          class="form-control" 
+          placeholder="Tìm theo mã đơn hàng, tên KH..."
+          (input)="onSearchChange($any($event.target).value)"
+        />
+        <select class="form-control" [(ngModel)]="selectedStatus" (change)="onStatusFilterChange()" style="max-width: 200px;">
+          <option *ngFor="let opt of statusOptions" [ngValue]="opt.value">
+            {{ opt.label }}
+          </option>
+        </select>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button class="btn btn-success d-flex align-items-center" (click)="exportOrdersReport()">
+          <i class="bi bi-file-earmark-pdf me-2 fs-5"></i>
+          <span>Xuất báo cáo PDF</span>
+        </button>
+        <button class="btn btn-primary d-flex align-items-center" (click)="loadOrders()">
+          <i class="bi bi-arrow-clockwise me-2 fs-5"></i>
+          <span>Làm mới</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Bảng đơn hàng -->
+    <div class="card shadow-sm border-0 rounded-3">
+      <div class="card-body p-0">
+        <div *ngIf="isLoading" class="text-center py-5">
+          <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+          <p class="mt-2">Đang tải dữ liệu...</p>
+        </div>
+
+        <table *ngIf="!isLoading" class="table table-hover align-middle mb-0">
+          <thead class="table-light">
+            <tr>
+              <th class="text-center">#</th>
+              <th class="text-center">Mã đơn hàng</th>
+              <th class="text-center">Username</th>
+              <th>Khách hàng</th>
+              <th class="text-end">Số tiền</th>
+              <th class="text-center">Trạng thái</th>
+              <th class="text-center">Thanh toán</th>
+              <th class="text-center">Ngày tạo</th>
+              <th class="text-center">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let order of orders; let i = index">
+              <td class="text-center">{{ i + 1 + (currentPage * pageSize) }}</td>
+              <td class="text-center">
+                <strong>{{ order.orderNumber }}</strong>
+              </td>
+              <td class="text-center">
+                <strong>{{ order.username }}</strong>
+              </td>
+              <td>
+                <div>{{ order.receiverName }}</div>
+                <small class="text-muted">{{ order.phoneNumber }}</small>
+              </td>
+              <td class="text-end">
+                <strong class="text-danger">{{ formatCurrency(order.totalAmount) }}</strong>
+              </td>
+              <td class="text-center">
+                <span class="badge" [ngClass]="getStatusBadgeClass(order.status)">
+                  {{ getStatusLabel(order.status) }}
+                </span>
+              </td>
+              <td class="text-center">
+                <span class="badge" [ngClass]="order.paymentStatus === 'PAID' ? 'bg-success' : 'bg-warning'">
+                  {{ order.paymentStatus === 'PAID' ? 'Đã thanh toán' : 'Chưa thanh toán' }}
+                </span>
+              </td>
+              <td class="text-center">
+                <small>{{ formatDate(order.createdAt) }}</small>
+              </td>
+              <td class="text-center">
+                <button class="btn btn-sm btn-outline-info me-1" (click)="viewOrderDetails(order)" title="Xem chi tiết">
+                  <i class="bi bi-eye"></i>
+                </button>
+                <button 
+                  class="btn btn-sm btn-outline-warning me-1" 
+                  (click)="openUpdateStatusModal(order)"
+                  [disabled]="order.status === 'DELIVERED' || order.status === 'CANCELLED'"
+                  title="Cập nhật trạng thái"
+                >
+                  <i class="bi bi-pencil-square"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" (click)="exportOrderPDF(order)" title="Xuất PDF">
+                  <i class="bi bi-file-earmark-pdf"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="orders.length === 0">
+              <td colspan="9" class="text-center py-4">
+                <p class="text-muted mb-0">Không có đơn hàng nào</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Phân trang -->
+      <div class="card-footer bg-white py-3 d-flex justify-content-between align-items-center">
+        <div class="text-muted small">
+          Trang {{ currentPage + 1 }} / {{ totalPages }} ({{ totalElements }} đơn hàng)
+        </div>
+        <nav *ngIf="totalPages > 0">
+          <ul class="pagination mb-0">
+            <!-- First Page -->
+            <li class="page-item" [class.disabled]="currentPage === 0">
+              <button class="page-link" (click)="goToPage(0)" title="Trang đầu">&laquo;&laquo;</button>
+            </li>
+            
+            <!-- Previous -->
+            <li class="page-item" [class.disabled]="currentPage === 0">
+              <button class="page-link" (click)="previousPage()">&lsaquo;</button>
+            </li>
+            
+            <!-- Page Numbers -->
+            <li class="page-item" *ngFor="let page of getPageNumbers()" 
+                [class.active]="currentPage === page"
+                [class.disabled]="page === -1">
+              <button class="page-link" 
+                      *ngIf="page !== -1" 
+                      (click)="goToPage(page)">
+                {{ page + 1 }}
+              </button>
+              <span class="page-link" *ngIf="page === -1">...</span>
+            </li>
+            
+            <!-- Next -->
+            <li class="page-item" [class.disabled]="currentPage === totalPages - 1">
+              <button class="page-link" (click)="nextPage()">&rsaquo;</button>
+            </li>
+            
+            <!-- Last Page -->
+            <li class="page-item" [class.disabled]="currentPage === totalPages - 1">
+              <button class="page-link" (click)="goToPage(totalPages - 1)" title="Trang cuối">&raquo;&raquo;</button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+</div>
+
+<!-- Order Detail Modal -->
+<div class="modal fade" [class.show]="showDetailModal" *ngIf="showDetailModal && selectedOrder" tabindex="-1">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-receipt me-2"></i>Chi tiết đơn hàng #{{ selectedOrder.orderNumber }}
+        </h5>
+        <button type="button" class="btn-close btn-close-white" (click)="closeDetailModal()"></button>
+      </div>
+      <div class="modal-body p-4">
+        <!-- Thông tin đơn hàng -->
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <div class="card border-0 bg-light h-100">
+              <div class="card-body">
+                <h6 class="card-title text-primary mb-3">
+                  <i class="bi bi-person-circle me-2"></i>Thông tin khách hàng
+                </h6>
+                <table class="table table-borderless table-sm mb-0">
+                  <tbody>
+                    <tr>
+                      <td class="text-muted" style="width: 40%;">Người nhận:</td>
+                      <td><strong>{{ selectedOrder.receiverName }}</strong></td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted">Số điện thoại:</td>
+                      <td><strong>{{ selectedOrder.phoneNumber }}</strong></td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted">Địa chỉ:</td>
+                      <td><strong>{{ selectedOrder.shippingAddress }}</strong></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="card border-0 bg-light h-100">
+              <div class="card-body">
+                <h6 class="card-title text-primary mb-3">
+                  <i class="bi bi-info-circle me-2"></i>Thông tin đơn hàng
+                </h6>
+                <table class="table table-borderless table-sm mb-0">
+                  <tbody>
+                    <tr>
+                      <td class="text-muted" style="width: 40%;">Trạng thái:</td>
+                      <td>
+                        <span class="badge" [ngClass]="getStatusBadgeClass(selectedOrder.status)">
+                          {{ getStatusLabel(selectedOrder.status) }}
+                        </span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted">Phương thức TT:</td>
+                      <td><strong>{{ selectedOrder.paymentMethod }}</strong></td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted">Trạng thái TT:</td>
+                      <td>
+                        <span class="badge" [ngClass]="selectedOrder.paymentStatus === 'PAID' ? 'bg-success' : 'bg-warning'">
+                          {{ selectedOrder.paymentStatus === 'PAID' ? 'Đã thanh toán' : 'Chưa thanh toán' }}
+                        </span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="text-muted">Ngày tạo:</td>
+                      <td><strong>{{ formatDate(selectedOrder.createdAt) }}</strong></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Danh sách sản phẩm -->
+        <div class="mb-4">
+          <h6 class="text-primary mb-3">
+            <i class="bi bi-cart-check me-2"></i>Sản phẩm đã đặt
+          </h6>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 80px;" class="text-center">#</th>
+                  <th style="width: 100px;">Ảnh</th>
+                  <th>Tên sản phẩm</th>
+                  <th class="text-center" style="width: 120px;">Số lượng</th>
+                  <th class="text-end" style="width: 150px;">Đơn giá</th>
+                  <th class="text-end" style="width: 150px;">Thành tiền</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of selectedOrder.items; let i = index">
+                  <td class="text-center">{{ i + 1 }}</td>
+                  <td>
+                    <img [src]="imageUrl(item)" [alt]="item.productName"
+                      class="img-thumbnail"
+                      style="width: 60px; height: 60px; object-fit: cover;"
+                    />
+                  </td>
+                  <td>
+                    <div class="fw-bold">{{ item.productName }}</div>
+                    <small class="text-muted">ID: {{ item.productId }}</small>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge bg-secondary">{{ item.quantity }}</span>
+                  </td>
+                  <td class="text-end">{{ formatCurrency(item.price) }}</td>
+                  <td class="text-end">
+                    <strong class="text-primary">{{ formatCurrency(item.quantity * item.price) }}</strong>
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot class="table-light">
+                <tr>
+                  <th colspan="5" class="text-end">Tổng cộng:</th>
+                  <th class="text-end">
+                    <span class="text-danger fs-5">{{ formatCurrency(selectedOrder.totalAmount) }}</span>
+                  </th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+        
+        <!-- Ghi chú -->
+        <div *ngIf="selectedOrder.note" class="alert alert-info mb-0">
+          <h6 class="alert-heading">
+            <i class="bi bi-pencil-square me-2"></i>Ghi chú
+          </h6>
+          <p class="mb-0">{{ selectedOrder.note }}</p>
+        </div>
+      </div>
+      <div class="modal-footer bg-light">
+        <button type="button" class="btn btn-secondary" (click)="closeDetailModal()">
+          <i class="bi bi-x-circle me-2"></i>Đóng
+        </button>
+        <button type="button" class="btn btn-primary" (click)="exportOrderPDF(selectedOrder)">
+          <i class="bi bi-file-earmark-pdf me-2"></i>Xuất PDF
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Update Status Modal -->
+<div class="modal" [class.show]="showUpdateStatusModal" *ngIf="showUpdateStatusModal && selectedOrder">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cập nhật trạng thái đơn hàng #{{ selectedOrder.orderNumber }}</h5>
+        <button type="button" class="close" (click)="closeUpdateStatusModal()">
+          <span>&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Trạng thái hiện tại</label>
+          <p>
+            <span class="badge" [ngClass]="getStatusBadgeClass(selectedOrder.status)">
+              {{ getStatusLabel(selectedOrder.status) }}
+            </span>
+          </p>
+        </div>
+        <div class="form-group">
+          <label>Trạng thái mới <span class="text-danger">*</span></label>
+          <select class="form-control" [(ngModel)]="newStatus">
+            <option [value]="OrderStatus.PENDING">Chờ xác nhận</option>
+            <option [value]="OrderStatus.CONFIRMED">Đã xác nhận</option>
+            <option [value]="OrderStatus.SHIPPING">Đang giao hàng</option>
+            <option [value]="OrderStatus.DELIVERED">Đã giao hàng</option>
+            <option [value]="OrderStatus.CANCELLED">Đã hủy</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeUpdateStatusModal()">Hủy</button>
+        <button type="button" class="btn btn-primary" (click)="submitUpdateStatus()">
+          <i class="fas fa-save"></i> Cập nhật
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" *ngIf="showDetailModal || showUpdateStatusModal"></div>

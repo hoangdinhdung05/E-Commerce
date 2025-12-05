@@ -1,0 +1,121 @@
+<div class="product-filter">
+  <div class="filter-header">
+    <h4>Lọc sản phẩm</h4>
+    <button class="btn-clear" (click)="clearFilters()">
+      <i class="fas fa-times"></i> Xóa bộ lọc
+    </button>
+  </div>
+
+  <!-- Categories Filter -->
+  <div class="filter-section">
+    <h5 class="filter-title">
+      <i class="fas fa-list"></i> Danh mục
+    </h5>
+    <div class="filter-content category-filter-content">
+      <div *ngIf="isLoadingCategories" class="loading-categories">
+        <i class="fas fa-spinner fa-spin"></i> Đang tải danh mục...
+      </div>
+      <div *ngFor="let category of categories" class="category-item">
+        <label class="radio-container">
+          <input 
+            type="radio" 
+            name="category"
+            [checked]="selectedCategory === category.id"
+            (change)="toggleCategory(category.id)"
+          />
+          <span class="radio-mark"></span>
+          <span class="category-name">{{ category.name }}</span>
+          <span class="category-count" *ngIf="category.count !== undefined">({{ category.count }})</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Price Range Filter -->
+  <div class="filter-section">
+    <h5 class="filter-title">
+      <i class="fas fa-dollar-sign"></i> Khoảng giá
+    </h5>
+    <div class="filter-content">
+      <div class="price-inputs">
+        <div class="price-input-group">
+          <label>Từ</label>
+          <input 
+            type="number" 
+            [(ngModel)]="priceRange.min" 
+            (ngModelChange)="onPriceRangeChange()"
+            class="price-input"
+            placeholder="0"
+          />
+        </div>
+        <div class="price-separator">-</div>
+        <div class="price-input-group">
+          <label>Đến</label>
+          <input 
+            type="number" 
+            [(ngModel)]="priceRange.max" 
+            (ngModelChange)="onPriceRangeChange()"
+            class="price-input"
+            placeholder="1000"
+          />
+        </div>
+      </div>
+      
+      <!-- Price Range Slider (optional) -->
+      <div class="price-range-display">
+        <span class="price-value">${{ priceRange.min }} - ${{ priceRange.max }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sort Options -->
+  <div class="filter-section">
+    <h5 class="filter-title">
+      <i class="fas fa-sort"></i> Sắp xếp
+    </h5>
+    <div class="filter-content">
+      <select 
+        [(ngModel)]="sortBy" 
+        (ngModelChange)="onSortChange()"
+        class="sort-select"
+      >
+        <option *ngFor="let option of sortOptions" [value]="option.value">
+          {{ option.label }}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Stock Filter -->
+  <div class="filter-section">
+    <h5 class="filter-title">
+      <i class="fas fa-check-circle"></i> Tình trạng
+    </h5>
+    <div class="filter-content">
+      <label class="checkbox-container">
+        <input 
+          type="checkbox" 
+          [(ngModel)]="inStock"
+          (ngModelChange)="onStockFilterChange()"
+        />
+        <span class="checkmark"></span>
+        <span>Chỉ hiển thị sản phẩm còn hàng</span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Quick Filters -->
+  <div class="filter-section">
+    <h5 class="filter-title">
+      <i class="fas fa-star"></i> Bộ lọc nhanh
+    </h5>
+    <div class="filter-content">
+      <div class="quick-filters">
+        <button class="quick-filter-btn">Giảm giá</button>
+        <button class="quick-filter-btn">Mới nhất</button>
+        <button class="quick-filter-btn">Bán chạy</button>
+        <button class="quick-filter-btn">Đánh giá cao</button>
+      </div>
+    </div>
+  </div>
+</div>

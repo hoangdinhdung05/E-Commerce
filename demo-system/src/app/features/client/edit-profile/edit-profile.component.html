@@ -1,0 +1,241 @@
+<div class="edit-profile-page">
+  <div class="container">
+    <!-- Header -->
+    <div class="page-header">
+      <h1><i class="fas fa-edit"></i> Chỉnh sửa hồ sơ</h1>
+      <p>Cập nhật thông tin cá nhân của bạn</p>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="loading-container">
+      <div class="loading-spinner">
+        <i class="fas fa-spinner fa-spin"></i>
+        <span>Đang tải thông tin...</span>
+      </div>
+    </div>
+
+    <!-- Edit Form -->
+    <div *ngIf="!isLoading" class="edit-content">
+      <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="profile-form">
+        
+        <div class="form-grid">
+          
+          <!-- Avatar Section -->
+          <div class="form-card avatar-section">
+            <div class="card-header">
+              <h3><i class="fas fa-camera"></i> Ảnh đại diện</h3>
+            </div>
+            <div class="card-body">
+              <div class="avatar-upload">
+                
+                <!-- Current/Preview Avatar -->
+                <div class="avatar-container">
+                  <div class="avatar-large" *ngIf="previewUrl || avatarUrl; else defaultAvatar">
+                    <img [src]="previewUrl || avatarUrl" [alt]="user?.firstName" />
+                    <div class="avatar-overlay">
+                      <i class="fas fa-camera"></i>
+                    </div>
+                  </div>
+                  <ng-template #defaultAvatar>
+                    <div class="avatar-initial-large">
+                      {{ user?.firstName?.charAt(0) || user?.username?.charAt(0) || 'U' }}
+                      <div class="avatar-overlay">
+                        <i class="fas fa-camera"></i>
+                      </div>
+                    </div>
+                  </ng-template>
+                </div>
+
+                <!-- Upload Controls -->
+                <div class="avatar-controls">
+                  <input type="file" 
+                         id="avatar-upload" 
+                         accept="image/*" 
+                         (change)="onFileSelected($event)"
+                         #fileInput
+                         style="display: none;">
+                  
+                  <button type="button" 
+                          class="btn btn-primary btn-sm"
+                          (click)="fileInput.click()">
+                    <i class="fas fa-upload"></i>
+                    {{ avatarUrl || previewUrl ? 'Thay đổi ảnh' : 'Tải ảnh lên' }}
+                  </button>
+                  
+                  <button type="button" 
+                          class="btn btn-outline btn-sm"
+                          *ngIf="avatarUrl || previewUrl"
+                          (click)="removeAvatar()">
+                    <i class="fas fa-trash"></i> Xóa ảnh
+                  </button>
+                </div>
+
+                <div class="upload-info">
+                  <small class="text-muted">
+                    <i class="fas fa-info-circle"></i>
+                    Chọn file JPG, PNG hoặc GIF. Kích thước tối đa 5MB.
+                  </small>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- Personal Information -->
+          <div class="form-card personal-info">
+            <div class="card-header">
+              <h3><i class="fas fa-user"></i> Thông tin cá nhân</h3>
+            </div>
+            <div class="card-body">
+              
+              <!-- Username (readonly) -->
+              <div class="form-group">
+                <label for="username">Tên đăng nhập</label>
+                <input type="text" 
+                       id="username"
+                       formControlName="username"
+                       class="form-control"
+                       readonly>
+                <small class="help-text">Tên đăng nhập không thể thay đổi</small>
+              </div>
+
+              <!-- Name fields -->
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="firstName">Tên <span class="required">*</span></label>
+                  <input type="text" 
+                         id="firstName"
+                         formControlName="firstName"
+                         class="form-control"
+                         [class.is-invalid]="isFieldInvalid('firstName')"
+                         placeholder="Nhập tên của bạn">
+                  <div class="invalid-feedback" *ngIf="isFieldInvalid('firstName')">
+                    {{ getFieldError('firstName') }}
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="lastName">Họ <span class="required">*</span></label>
+                  <input type="text" 
+                         id="lastName"
+                         formControlName="lastName"
+                         class="form-control"
+                         [class.is-invalid]="isFieldInvalid('lastName')"
+                         placeholder="Nhập họ của bạn">
+                  <div class="invalid-feedback" *ngIf="isFieldInvalid('lastName')">
+                    {{ getFieldError('lastName') }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Email -->
+              <div class="form-group">
+                <label for="email">Email <span class="required">*</span></label>
+                <input type="email" 
+                       id="email"
+                       formControlName="email"
+                       class="form-control"
+                       [class.is-invalid]="isFieldInvalid('email')"
+                       placeholder="your.email@example.com">
+                <div class="invalid-feedback" *ngIf="isFieldInvalid('email')">
+                  {{ getFieldError('email') }}
+                </div>
+              </div>
+
+              <!-- Phone -->
+              <div class="form-group">
+                <label for="phone">Số điện thoại</label>
+                <input type="tel" 
+                       id="phone"
+                       formControlName="phone"
+                       class="form-control"
+                       [class.is-invalid]="isFieldInvalid('phone')"
+                       placeholder="0123456789">
+                <div class="invalid-feedback" *ngIf="isFieldInvalid('phone')">
+                  {{ getFieldError('phone') }}
+                </div>
+              </div>
+
+              <!-- Date of Birth & Gender -->
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="dateOfBirth">Ngày sinh</label>
+                  <input type="date" 
+                         id="dateOfBirth"
+                         formControlName="dateOfBirth"
+                         class="form-control">
+                </div>
+
+                <div class="form-group">
+                  <label for="gender">Giới tính</label>
+                  <select id="gender" 
+                          formControlName="gender"
+                          class="form-control">
+                    <option value="">Chọn giới tính</option>
+                    <option value="male">Nam</option>
+                    <option value="female">Nữ</option>
+                    <option value="other">Khác</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Address -->
+              <div class="form-group">
+                <label for="address">Địa chỉ</label>
+                <input type="text" 
+                       id="address"
+                       formControlName="address"
+                       class="form-control"
+                       placeholder="Nhập địa chỉ của bạn">
+              </div>
+
+              <!-- Bio -->
+              <div class="form-group">
+                <label for="bio">Giới thiệu bản thân</label>
+                <textarea id="bio" 
+                          formControlName="bio"
+                          class="form-control"
+                          rows="4"
+                          [class.is-invalid]="isFieldInvalid('bio')"
+                          placeholder="Viết vài dòng giới thiệu về bản thân..."></textarea>
+                <div class="invalid-feedback" *ngIf="isFieldInvalid('bio')">
+                  {{ getFieldError('bio') }}
+                </div>
+                <small class="help-text">Tối đa 500 ký tự</small>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="form-actions">
+          <button type="submit" 
+                  class="btn btn-primary btn-lg"
+                  [disabled]="!profileForm.valid || isSaving">
+            <i class="fas fa-spinner fa-spin" *ngIf="isSaving"></i>
+            <i class="fas fa-save" *ngIf="!isSaving"></i>
+            {{ isSaving ? 'Đang lưu...' : 'Lưu thay đổi' }}
+          </button>
+
+          <button type="button" 
+                  class="btn btn-outline btn-lg"
+                  (click)="resetForm()"
+                  [disabled]="isSaving">
+            <i class="fas fa-undo"></i> Khôi phục
+          </button>
+
+          <button type="button" 
+                  class="btn btn-secondary btn-lg"
+                  (click)="cancelEdit()"
+                  [disabled]="isSaving">
+            <i class="fas fa-times"></i> Hủy
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+  </div>
+</div>

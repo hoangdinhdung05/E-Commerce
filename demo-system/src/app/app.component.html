@@ -1,0 +1,26 @@
+<ng-container *ngIf="showAdminLayout; else clientOrAuthLayout">
+  <div class="wrapper">
+    <app-side-bar></app-side-bar>
+    <div class="main-content">
+      <app-header></app-header>
+      <div class="content-wrapper">
+        <router-outlet></router-outlet>
+      </div>
+      <app-footer></app-footer>
+    </div>
+  </div>
+</ng-container>
+
+<ng-template #clientOrAuthLayout>
+  <ng-container *ngIf="showClientLayout; else authLayout">
+    <!-- <app-client-header></app-client-header> -->
+    <router-outlet></router-outlet>
+    <!-- <app-client-footer></app-client-footer> -->
+  </ng-container>
+
+  <ng-template #authLayout>
+    <router-outlet></router-outlet>
+  </ng-template>
+</ng-template>
+
+<app-toast></app-toast>

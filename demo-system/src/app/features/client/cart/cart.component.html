@@ -1,0 +1,169 @@
+<div class="cart-page">
+  <div class="container">
+    <!-- Page Header -->
+    <div class="page-header">
+      <h1><i class="fas fa-shopping-cart"></i> Giỏ hàng của bạn</h1>
+      <p *ngIf="cart && cart.totalItems > 0">
+        Bạn có <strong>{{ cart.totalItems }}</strong> sản phẩm trong giỏ hàng
+      </p>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+      <i class="fas fa-spinner fa-spin fa-3x"></i>
+      <p>Đang tải giỏ hàng...</p>
+    </div>
+
+    <!-- Empty Cart -->
+    <div *ngIf="!isLoading && (!cart || cart.totalItems === 0)" class="empty-cart">
+      <i class="fas fa-shopping-cart fa-5x"></i>
+      <h2>Giỏ hàng trống</h2>
+      <p>Bạn chưa có sản phẩm nào trong giỏ hàng</p>
+      <button class="btn btn-primary" (click)="continueShopping()">
+        <i class="fas fa-shopping-bag"></i> Tiếp tục mua sắm
+      </button>
+    </div>
+
+    <!-- Cart Content -->
+    <div *ngIf="!isLoading && cart && cart.totalItems > 0" class="cart-content">
+      <div class="row">
+        <!-- Cart Items -->
+        <div class="col-lg-8">
+          <div class="cart-items-section">
+            <div class="section-header">
+              <h3>Sản phẩm</h3>
+              <button class="btn-clear" (click)="clearCart()">
+                <i class="fas fa-trash"></i> Xóa tất cả
+              </button>
+            </div>
+
+            <!-- Cart Item List -->
+            <div class="cart-items">
+              <div 
+                *ngFor="let item of cart.items" 
+                class="cart-item"
+                [class.updating]="isUpdating(item.id)"
+              >
+                <!-- Product Image -->
+                <div class="item-image">
+                  <img [src]="getProductImageUrl(item)" [alt]="item.productName" />
+                  <span *ngIf="item.availableStock < 10" class="stock-warning">
+                    Chỉ còn {{ item.availableStock }}
+                  </span>
+                </div>
+
+                <!-- Product Info -->
+                <div class="item-info">
+                  <h4 class="item-name">{{ item.productName }}</h4>
+                  <p class="item-price">{{ formatCurrency(item.price) }}</p>
+                  <p class="stock-status" [class.low-stock]="item.availableStock < 10">
+                    <i class="fas fa-check-circle" *ngIf="item.availableStock >= 10"></i>
+                    <i class="fas fa-exclamation-circle" *ngIf="item.availableStock < 10"></i>
+                    {{ item.availableStock >= 10 ? 'Còn hàng' : 'Sắp hết hàng' }}
+                  </p>
+                </div>
+
+                <!-- Quantity Control -->
+                <div class="item-quantity">
+                  <label>Số lượng:</label>
+                  <div class="quantity-control">
+                    <button 
+                      class="btn-quantity" 
+                      (click)="decreaseQuantity(item)"
+                      [disabled]="item.quantity <= 1 || isUpdating(item.id)"
+                    >
+                      <i class="fas fa-minus"></i>
+                    </button>
+                    <input 
+                      type="number" 
+                      class="quantity-input" 
+                      [value]="item.quantity"
+                      (change)="updateQuantity(item, +$any($event.target).value)"
+                      [disabled]="isUpdating(item.id)"
+                      min="1"
+                      [max]="item.availableStock"
+                    />
+                    <button 
+                      class="btn-quantity" 
+                      (click)="increaseQuantity(item)"
+                      [disabled]="item.quantity >= item.availableStock || isUpdating(item.id)"
+                    >
+                      <i class="fas fa-plus"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Subtotal -->
+                <div class="item-subtotal">
+                  <label>Tạm tính:</label>
+                  <p class="subtotal-amount">{{ formatCurrency(item.subtotal) }}</p>
+                </div>
+
+                <!-- Remove Button -->
+                <div class="item-actions">
+                  <button 
+                    class="btn-remove" 
+                    (click)="removeItem(item)"
+                    [disabled]="isUpdating(item.id)"
+                    title="Xóa sản phẩm"
+                  >
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+
+                <!-- Updating Overlay -->
+                <div *ngIf="isUpdating(item.id)" class="updating-overlay">
+                  <i class="fas fa-spinner fa-spin"></i>
+                </div>
+              </div>
+            </div>
+            <div>Page</div>
+          </div>
+        </div>
+
+        <!-- Cart Summary -->
+        <div class="col-lg-4">
+          <div class="cart-summary">
+            <h3>Tổng đơn hàng</h3>
+            
+            <div class="summary-details">
+              <div class="summary-row">
+                <span>Tạm tính:</span>
+                <span>{{ formatCurrency(getTotalAmount()) }}</span>
+              </div>
+              <div class="summary-row">
+                <span>Phí vận chuyển:</span>
+                <span class="text-success">Miễn phí</span>
+              </div>
+              <div class="summary-divider"></div>
+              <div class="summary-row total">
+                <span>Tổng cộng:</span>
+                <span class="total-amount">{{ formatCurrency(getTotalAmount()) }}</span>
+              </div>
+            </div>
+
+            <button class="btn btn-checkout" (click)="proceedToCheckout()">
+              <i class="fas fa-shopping-cart"></i>
+              Tiến hành thanh toán
+            </button>
+
+            <button class="btn btn-continue" (click)="continueShopping()">
+              <i class="fas fa-arrow-left"></i>
+              Tiếp tục mua sắm
+            </button>
+
+            <!-- Promotions -->
+            <div class="promo-section">
+              <h4><i class="fas fa-gift"></i> Ưu đãi</h4>
+              <ul class="promo-list">
+                <li><i class="fas fa-check"></i> Miễn phí vận chuyển cho đơn từ 500.000₫</li>
+                <li><i class="fas fa-check"></i> Đổi trả miễn phí trong 7 ngày</li>
+                <li><i class="fas fa-check"></i> Bảo hành chính hãng</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

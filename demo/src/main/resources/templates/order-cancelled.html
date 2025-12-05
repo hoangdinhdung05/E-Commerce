@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đơn hàng đã bị hủy</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #dc3545;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #dc3545;
+            margin: 0;
+            font-size: 28px;
+        }
+        .cancel-icon {
+            text-align: center;
+            font-size: 60px;
+            color: #dc3545;
+            margin-bottom: 20px;
+        }
+        .order-info {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .order-info p {
+            margin: 10px 0;
+        }
+        .order-info strong {
+            color: #721c24;
+        }
+        .refund-info {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 20px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        .refund-info h4 {
+            margin-top: 0;
+            color: #856404;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #dee2e6;
+            color: #6c757d;
+            font-size: 14px;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="cancel-icon">❌</div>
+        
+        <div class="header">
+            <h1>Đơn hàng đã bị hủy</h1>
+            <p>Rất tiếc, đơn hàng của bạn đã bị hủy</p>
+        </div>
+
+        <div class="order-info">
+            <p><strong>Mã đơn hàng:</strong> <span th:text="${orderNumber}"></span></p>
+            <p><strong>Ngày hủy:</strong> <span th:text="${cancelledAt}"></span></p>
+            <p th:if="${cancelReason}"><strong>Lý do:</strong> <span th:text="${cancelReason}"></span></p>
+        </div>
+
+        <div class="refund-info" th:if="${refundAmount}">
+            <h4>Thông tin hoàn tiền:</h4>
+            <p><strong>Số tiền hoàn lại:</strong> <span th:text="${#numbers.formatDecimal(refundAmount, 0, 'COMMA', 0, 'POINT')} + '₫'"></span></p>
+            <p>Số tiền sẽ được hoàn lại vào tài khoản của bạn trong vòng <strong>3-5 ngày làm việc</strong>.</p>
+            <p th:if="${paymentMethod == 'COD'}">
+                <em>Lưu ý: Đơn hàng thanh toán khi nhận hàng (COD) không có số tiền cần hoàn lại.</em>
+            </p>
+        </div>
+
+        <div style="padding: 20px; background-color: #f8f9fa; border-radius: 6px; margin: 20px 0;">
+            <h4 style="margin-top: 0;">Chúng tôi rất tiếc về sự bất tiện này!</h4>
+            <p>Nếu bạn vẫn muốn mua sắm, chúng tôi có rất nhiều sản phẩm tuyệt vời khác đang chờ bạn khám phá.</p>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="#" class="button">Tiếp tục mua sắm</a>
+        </div>
+
+        <div class="footer">
+            <p>Nếu có bất kỳ thắc mắc nào về việc hủy đơn hoặc hoàn tiền, vui lòng liên hệ:</p>
+            <p><a href="mailto:support@demostore.com">support@demostore.com</a> | Hotline: 1800-xxxx</p>
+            <p style="margin-top: 20px;">© 2025 Demo Store. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

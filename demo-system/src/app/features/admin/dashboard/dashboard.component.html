@@ -1,0 +1,157 @@
+<div class="dashboard-container">
+  <div class="container-fluid py-4">
+    <h2 class="mb-4 fw-bold">Dashboard</h2>
+    
+    <!-- Stats Cards -->
+    <div class="row g-3 mb-4">
+      <!-- Users Card -->
+      <div class="col-md-6 col-lg-3">
+        <div class="border-primary">
+          <div class="stat-card" (click)="navigateToUsers()">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="flex-grow-1">
+                <div class="stat-header">Người dùng</div>
+                <div class="stat-value text-primary">{{ totalUsers | number }}</div>
+              </div>
+              <div class="stat-icon bg-primary bg-opacity-10">
+                <i class="fas fa-users text-primary fs-4"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Categories Card -->
+      <div class="col-md-6 col-lg-3">
+        <div class="border-info">
+          <div class="stat-card" (click)="navigateToCategories()">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="flex-grow-1">
+                <div class="stat-header">Danh mục</div>
+                <div class="stat-value text-info">{{ totalCategories | number }}</div>
+              </div>
+              <div class="stat-icon bg-info bg-opacity-10">
+                <i class="fas fa-folder text-info fs-4"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Products Card -->
+      <div class="col-md-6 col-lg-3">
+        <div class="border-success">
+          <div class="stat-card" (click)="navigateToProducts()">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="flex-grow-1">
+                <div class="stat-header">Sản phẩm</div>
+                <div class="stat-value text-success">{{ totalProducts | number }}</div>
+              </div>
+              <div class="stat-icon bg-success bg-opacity-10">
+                <i class="fas fa-box text-success fs-4"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Orders Card -->
+      <div class="col-md-6 col-lg-3">
+        <div class="border-warning">
+          <div class="stat-card" (click)="navigateToOrders()">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="flex-grow-1">
+                <div class="stat-header">Tổng đơn hàng</div>
+                <div class="stat-value text-warning">{{ totalOrders | number }}</div>
+              </div>
+              <div class="stat-icon bg-warning bg-opacity-10">
+                <i class="fas fa-shopping-cart text-warning fs-4"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending Orders Card -->
+      <div class="col-md-6 col-lg-3">
+        <div class="border-danger">
+          <div class="stat-card" (click)="navigateToOrders()">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="flex-grow-1">
+                <div class="stat-header">Chờ xử lý</div>
+                <div class="stat-value text-danger">{{ pendingOrders | number }}</div>
+              </div>
+              <div class="stat-icon bg-danger bg-opacity-10">
+                <i class="fas fa-clock text-danger fs-4"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Completed Orders Card -->
+      <div class="col-md-6 col-lg-3">
+        <div class="border-success">
+          <div class="stat-card" (click)="navigateToOrders()">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="flex-grow-1">
+                <div class="stat-header">Hoàn thành</div>
+                <div class="stat-value text-success">{{ completedOrders | number }}</div>
+              </div>
+              <div class="stat-icon bg-success bg-opacity-10">
+                <i class="fas fa-check-circle text-success fs-4"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Revenue Card -->
+      <div class="col-md-6 col-lg-3">
+        <div class="border-primary">
+          <div class="stat-card" (click)="navigateToPayments()">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="flex-grow-1">
+                <div class="stat-header">Doanh thu</div>
+                <div class="stat-value text-primary">{{ totalRevenue | number:'1.0-0' }} VNĐ</div>
+              </div>
+              <div class="stat-icon bg-primary bg-opacity-10">
+                <i class="fas fa-dollar-sign text-primary fs-4"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="row g-4 mt-2">
+      <!-- Bar Chart - Tổng quan hệ thống -->
+      <div class="col-lg-6">
+        <div class="card">
+          <div class="card-body" style="height: 400px;">
+            <canvas #barChart></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Doughnut Chart - Trạng thái đơn hàng -->
+      <div class="col-lg-6">
+        <div class="card">
+          <div class="card-body" style="height: 400px;">
+            <canvas #doughnutChart></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Line Chart - Doanh thu -->
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body" style="height: 400px;">
+            <canvas #lineChart></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

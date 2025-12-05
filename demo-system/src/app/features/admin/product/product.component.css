@@ -1,0 +1,31 @@
+/* Đơn giản, dễ nhìn, dễ thao tác */
+.dashboard-container {
+  padding: 20px;
+}
+
+.card {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+}
+
+.table thead th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.btn-sm {
+  padding: 4px 8px;
+  font-size: 0.875rem;
+}
+
+.product-image {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 4px;
+}

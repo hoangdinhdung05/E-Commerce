@@ -1,0 +1,110 @@
+.container {
+  background-color: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  padding: 40px 30px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+h3 {
+  font-weight: 600;
+  color: #333;
+}
+
+.email-info {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 20px;
+}
+
+.email-info p {
+  margin: 0;
+}
+
+.email-info strong {
+  color: #0d6efd;
+  font-size: 14px;
+}
+
+form {
+  margin-top: 20px;
+}
+
+.form-control {
+  border-radius: 10px;
+  height: 45px;
+  font-size: 15px;
+  border: 1px solid #ced4da;
+  transition: all 0.3s ease;
+  text-align: center;
+  letter-spacing: 2px;
+  font-weight: 500;
+}
+
+.form-control:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.btn-primary {
+  border-radius: 10px;
+  height: 45px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-primary:hover {
+  background-color: #0b5ed7;
+  transform: translateY(-1px);
+}
+
+.resend-section {
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #e9ecef;
+}
+
+.btn-outline-secondary {
+  border-radius: 10px;
+  height: 42px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  transition: all 0.3s ease;
+  color: #6c757d;
+  border-color: #6c757d;
+}
+
+.btn-outline-secondary:hover:not(:disabled) {
+  background-color: #6c757d;
+  border-color: #6c757d;
+  color: white;
+  transform: translateY(-1px);
+}
+
+.btn-outline-secondary:disabled,
+.btn-outline-secondary.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  background-color: #f8f9fa;
+  border-color: #dee2e6;
+  color: #adb5bd;
+}
+
+.text-muted {
+  color: #6c757d !important;
+  font-size: 13px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+

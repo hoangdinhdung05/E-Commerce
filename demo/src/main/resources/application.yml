@@ -1,0 +1,103 @@
+#Config port
+server:
+  port: 8080
+
+#Config application
+spring:
+  application:
+    name: demo-system
+
+  #Config database
+  datasource:
+    url: jdbc:mysql://localhost:3306/demo-system
+    username: root
+    password: 123456789
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  #Config jpa
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+  #Config redis
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 60000ms
+
+  #Config rabbitmq
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    listener:
+      simple:
+        acknowledge-mode: manual  # Xác nhận thủ công để kiểm soát tốt hơn
+        prefetch: 1              # Số message consumer nhận cùng lúc
+        retry:
+          enabled: true
+          initial-interval: 3000
+          max-attempts: 3
+
+  #Mail config
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: hoangdinhdung0205@gmail.com
+    password: motu mzui skpn xuzg
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  devtools:
+    add-properties: true
+
+#Config JWT
+jwt:
+  expiryMinutes: 15
+  expiryDay: 14
+  accessKey: p1zs6HE4bebUL6aVjJhSEtj/Bp4rhQPK3vUR2gpcA06muNhYO77Z9kzb3U5sDXBkdpEZwECJfm0tNuDRiVu29g==
+  refreshKey: vD/tpfdCt2JiqNX5VyXEx0SyxYFC06DjB9GoY6bER6lgyA2qlAGgCegeB9ZB+tfOf5yfw8ZX/SaZNkluZxtXZQ==
+
+#Config value redis
+otp:
+  expiry-minutes: 5
+  verify-key-expiry-minutes: 5
+  max-send-count: 5
+  resend-limit-minutes: 5
+  otp-length: 6
+
+#Config API docs
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    url: /v3/api-docs/demo-system
+openapi:
+  service:
+    api-docs: demo-system
+    server: http://localhost:${server.port}
+    title: Demo System
+    version: 1.0.0
+
+#Logging config
+logging:
+  level:
+    org.hibernate.SQL: INFO
+

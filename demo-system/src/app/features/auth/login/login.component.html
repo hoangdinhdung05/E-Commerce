@@ -1,0 +1,58 @@
+<section class="vh-100">
+  <div class="container py-5 h-100">
+    <div class="row d-flex justify-content-center align-items-center h-100">
+      <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+        <div class="card shadow-lg" style="border-radius: 1rem;">
+          <div class="card-body p-5 text-center">
+
+            <h3 class="mb-5">Đăng nhập</h3>
+
+            <!-- Bọc toàn bộ input trong form -->
+            <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+
+              <!-- Username -->
+              <div class="form-group mb-4 text-start">
+                <label for="username" class="form-label">Username</label>
+                <input type="text" id="username" class="form-control form-control-lg" formControlName="username" />
+                <div class="error" *ngIf="loginForm.get('username')?.touched && loginForm.get('username')?.hasError('required')">
+                  Vui lòng nhập tên đăng nhập
+                </div>
+                <div class="error" *ngIf="loginForm.get('username')?.touched && loginForm.get('username')?.hasError('minlength')">
+                  Tên đăng nhập ít nhất 6 ký tự
+                </div>
+              </div>
+
+              <!-- Password -->
+              <div class="form-group mb-4 text-start">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" id="password" class="form-control form-control-lg" formControlName="password" />
+                <div class="error" *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.hasError('required')">
+                  Vui lòng nhập mật khẩu
+                </div>
+                <div class="error" *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.hasError('minlength')">
+                  Mật khẩu ít nhất 6 ký tự
+                </div>
+              </div>
+
+              <!-- Checkbox -->
+              <div class="form-check d-flex justify-content-start mb-4">
+                <input class="form-check-input" type="checkbox" id="form1Example3" />
+                <label class="form-check-label ms-2" for="form1Example3">
+                  Remember password
+                </label>
+              </div>
+
+              <!-- Login button -->
+              <button class="btn btn-primary btn-lg w-100 mb-4" type="submit">
+                Login
+              </button>
+            </form>
+
+            <p>Chưa có tài khoản ? <a routerLink="/auth/register">Đăng kí</a></p>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

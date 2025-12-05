@@ -1,0 +1,70 @@
+<!-- HERO: Prominent banner with CTA and large visual -->
+  <section class="hero">
+    <div class="container hero-inner">
+      <div class="hero-left">
+        <h1 class="hero-title">Mega ưu đãi — Sản phẩm chất lượng, giao hàng nhanh</h1>
+        <p class="hero-description">Chọn từ hàng ngàn sản phẩm phổ biến: điện thoại, đồ gia dụng, thời trang và nhiều hơn nữa. Giá tốt — Dịch vụ tận tâm.</p>
+        <div class="hero-ctas">
+          <button class="btn-primary" (click)="exploreProducts()">Khám phá ngay</button>
+          <button class="btn-outline">Danh mục bán chạy</button>
+        </div>
+
+        <div class="hero-stats">
+          <div class="stat"><strong>1.000+</strong><span>Sản phẩm</span></div>
+          <div class="stat"><strong>500+</strong><span>Khách hàng</span></div>
+          <div class="stat"><strong>24/7</strong><span>Hỗ trợ</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories strip (horizontal) -->
+  <section class="categories-strip">
+    <div class="container">
+      <div class="categories-scroll">
+        <div class="cat" *ngFor="let category of featuredCategories" (click)="navigateToCategory(category.id)">
+          <div class="cat-icon"><i [class]="category.icon"></i></div>
+          <div class="cat-name">{{ category.name }}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="container">
+      <!-- Products + promotional brands -->
+      <section class="product-section">
+        <div class="section-header">
+          <h2>Sản phẩm nổi bật</h2>
+          <p>Những sản phẩm được yêu thích nhất trong tuần</p>
+        </div>
+        
+        <!-- Product Section with Filter -->
+        <div class="products-wrapper">
+          <div class="filter-sidebar">
+            <app-product-filter (filterChange)="onFilterChange($event)"></app-product-filter>
+          </div>
+          <div class="products-main">
+            <app-product-list [filterOptions]="currentFilters"></app-product-list>
+          </div>
+        </div>
+      </section>
+
+      <!-- Brands / Promotions row -->
+      <!-- <section class="brands-section">
+        <div class="section-header small">
+          <h3>Top thương hiệu</h3>
+        </div>
+        <div class="brands-row">
+          <img src="/assets/brand-apple.png" alt="Apple"/>
+          <img src="/assets/brand-samsung.png" alt="Samsung"/>
+          <img src="/assets/brand-xiaomi.png" alt="Xiaomi"/>
+          <img src="/assets/brand-realme.png" alt="Realme"/>
+          <img src="/assets/brand-mi.png" alt="Mi"/>
+        </div>
+      </section> -->
+    </div>
+  </main>
+
+

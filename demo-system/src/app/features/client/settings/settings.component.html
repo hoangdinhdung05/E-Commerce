@@ -1,0 +1,485 @@
+<div class="settings-page">
+  <div class="container">
+    
+    <!-- Header -->
+    <div class="page-header">
+      <h1><i class="fas fa-cog"></i> Cài đặt</h1>
+      <p>Quản lý tùy chọn và cài đặt tài khoản của bạn</p>
+    </div>
+
+    <!-- Settings Container -->
+    <div class="settings-container">
+      
+      <!-- Navigation Tabs -->
+      <div class="settings-nav">
+        <button class="nav-tab" 
+                [class.active]="activeTab === 'notifications'"
+                (click)="setActiveTab('notifications')">
+          <i class="fas fa-bell"></i>
+          <span>Thông báo</span>
+        </button>
+        
+        <button class="nav-tab" 
+                [class.active]="activeTab === 'privacy'"
+                (click)="setActiveTab('privacy')">
+          <i class="fas fa-shield-alt"></i>
+          <span>Quyền riêng tư</span>
+        </button>
+        
+        <button class="nav-tab" 
+                [class.active]="activeTab === 'display'"
+                (click)="setActiveTab('display')">
+          <i class="fas fa-palette"></i>
+          <span>Hiển thị</span>
+        </button>
+        
+        <button class="nav-tab" 
+                [class.active]="activeTab === 'data'"
+                (click)="setActiveTab('data')">
+          <i class="fas fa-database"></i>
+          <span>Dữ liệu</span>
+        </button>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="isLoading" class="loading-container">
+        <div class="loading-spinner">
+          <i class="fas fa-spinner fa-spin"></i>
+          <span>Đang tải cài đặt...</span>
+        </div>
+      </div>
+
+      <!-- Settings Content -->
+      <div *ngIf="!isLoading" class="settings-content">
+        
+        <!-- Notifications Tab -->
+        <div *ngIf="activeTab === 'notifications'" class="settings-tab">
+          <div class="tab-header">
+            <h2><i class="fas fa-bell"></i> Cài đặt thông báo</h2>
+            <p>Quản lý cách bạn nhận thông báo từ hệ thống</p>
+          </div>
+
+          <div class="settings-sections">
+            
+            <!-- Notification Channels -->
+            <div class="settings-section">
+              <h3>Kênh thông báo</h3>
+              <div class="settings-group">
+                
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <h4><i class="fas fa-envelope"></i> Thông báo Email</h4>
+                    <p>Nhận thông báo qua email</p>
+                  </div>
+                  <div class="setting-control">
+                    <label class="toggle-switch">
+                      <input type="checkbox" [(ngModel)]="notificationSettings.email">
+                      <span class="slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <h4><i class="fas fa-sms"></i> Thông báo SMS</h4>
+                    <p>Nhận thông báo qua tin nhắn điện thoại</p>
+                  </div>
+                  <div class="setting-control">
+                    <label class="toggle-switch">
+                      <input type="checkbox" [(ngModel)]="notificationSettings.sms">
+                      <span class="slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <h4><i class="fas fa-mobile-alt"></i> Push Notification</h4>
+                    <p>Nhận thông báo đẩy trên trình duyệt</p>
+                  </div>
+                  <div class="setting-control">
+                    <label class="toggle-switch">
+                      <input type="checkbox" [(ngModel)]="notificationSettings.push">
+                      <span class="slider"></span>
+                    </label>
+                    <button class="btn btn-sm btn-outline" 
+                            (click)="testNotification()"
+                            [disabled]="!notificationSettings.push">
+                      <i class="fas fa-test"></i> Thử nghiệm
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Notification Types -->
+            <div class="settings-section">
+              <h3>Loại thông báo</h3>
+              <div class="settings-group">
+                
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <h4><i class="fas fa-shopping-cart"></i> Cập nhật đơn hàng</h4>
+                    <p>Thông báo về trạng thái đơn hàng</p>
+                  </div>
+                  <div class="setting-control">
+                    <label class="toggle-switch">
+                      <input type="checkbox" [(ngModel)]="notificationSettings.orderUpdates">
+                      <span class="slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <h4><i class="fas fa-tags"></i> Khuyến mãi</h4>
+                    <p>Thông báo về các chương trình khuyến mãi</p>
+                  </div>
+                  <div class="setting-control">
+                    <label class="toggle-switch">
+                      <input type="checkbox" [(ngModel)]="notificationSettings.promotions">
+                      <span class="slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <h4><i class="fas fa-bullhorn"></i> Marketing</h4>
+                    <p>Thông báo về sản phẩm và dịch vụ mới</p>
+                  </div>
+                  <div class="setting-control">
+                    <label class="toggle-switch">
+                      <input type="checkbox" [(ngModel)]="notificationSettings.marketing">
+                      <span class="slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <h4><i class="fas fa-newspaper"></i> Newsletter</h4>
+                    <p>Nhận bản tin định kỳ</p>
+                  </div>
+                  <div class="setting-control">
+                    <label class="toggle-switch">
+                      <input type="checkbox" [(ngModel)]="notificationSettings.newsletter">
+                      <span class="slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Privacy Tab -->
+        <div *ngIf="activeTab === 'privacy'" class="settings-tab">
+          <div class="tab-header">
+            <h2><i class="fas fa-shield-alt"></i> Cài đặt quyền riêng tư</h2>
+            <p>Kiểm soát thông tin cá nhân và quyền riêng tư</p>
+          </div>
+
+          <div class="settings-sections">
+            
+            <!-- Profile Visibility -->
+            <div class="settings-section">
+              <h3>Hiển thị hồ sơ</h3>
+              <div class="settings-group">
+                
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <h4><i class="fas fa-eye"></i> Mức độ hiển thị hồ sơ</h4>
+                    <p>Ai có thể xem thông tin hồ sơ của bạn</p>
+                  </div>
+                  <div class="setting-control">
+                    <select class="form-control" [(ngModel)]="privacySettings.profileVisibility">
+                      <option value="public">Công khai</option>
+                      <option value="friends">Chỉ bạn bè</option>
+                      <option value="private">Riêng tư</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <h4><i class="fas fa-envelope"></i> Hiển thị email</h4>
+                    <p>Cho phép người khác xem email của bạn</p>
+                  </div>
+                  <div class="setting-control">
+                    <label class="toggle-switch">
+                      <input type="checkbox" [(ngModel)]="privacySettings.showEmail">
+                      <span class="slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <h4><i class="fas fa-phone"></i> Hiển thị số điện thoại</h4>
+                    <p>Cho phép người khác xem số điện thoại của bạn</p>
+                  </div>
+                  <div class="setting-control">
+                    <label class="toggle-switch">
+                      <input type="checkbox" [(ngModel)]="privacySettings.showPhone">
+                      <span class="slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Communication -->
+            <div class="settings-section">
+              <h3>Giao tiếp</h3>
+              <div class="settings-group">
+                
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <h4><i class="fas fa-comments"></i> Cho phép tin nhắn</h4>
+                    <p>Người khác có thể gửi tin nhắn cho bạn</p>
+                  </div>
+                  <div class="setting-control">
+                    <label class="toggle-switch">
+                      <input type="checkbox" [(ngModel)]="privacySettings.allowMessages">
+                      <span class="slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <h4><i class="fas fa-user-friends"></i> Lời mời kết bạn</h4>
+                    <p>Cho phép người khác gửi lời mời kết bạn</p>
+                  </div>
+                  <div class="setting-control">
+                    <label class="toggle-switch">
+                      <input type="checkbox" [(ngModel)]="privacySettings.allowFriendRequests">
+                      <span class="slider"></span>
+                    </label>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Display Tab -->
+        <div *ngIf="activeTab === 'display'" class="settings-tab">
+          <div class="tab-header">
+            <h2><i class="fas fa-palette"></i> Cài đặt hiển thị</h2>
+            <p>Tùy chỉnh giao diện và ngôn ngữ hiển thị</p>
+          </div>
+
+          <div class="settings-sections">
+            
+            <!-- Theme -->
+            <div class="settings-section">
+              <h3>Giao diện</h3>
+              <div class="settings-group">
+                
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <h4><i class="fas fa-moon"></i> Chủ đề</h4>
+                    <p>Chọn chủ đề hiển thị cho ứng dụng</p>
+                  </div>
+                  <div class="setting-control">
+                    <select class="form-control" 
+                            [(ngModel)]="displaySettings.theme"
+                            (change)="applyTheme()">
+                      <option value="light">Sáng</option>
+                      <option value="dark">Tối</option>
+                      <option value="auto">Tự động</option>
+                    </select>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Localization -->
+            <div class="settings-section">
+              <h3>Bản địa hóa</h3>
+              <div class="settings-group">
+                
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <h4><i class="fas fa-language"></i> Ngôn ngữ</h4>
+                    <p>Chọn ngôn ngữ hiển thị</p>
+                  </div>
+                  <div class="setting-control">
+                    <select class="form-control" [(ngModel)]="displaySettings.language">
+                      <option *ngFor="let lang of languageOptions" [value]="lang.value">
+                        {{ lang.label }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <h4><i class="fas fa-money-bill-wave"></i> Tiền tệ</h4>
+                    <p>Chọn đơn vị tiền tệ hiển thị</p>
+                  </div>
+                  <div class="setting-control">
+                    <select class="form-control" [(ngModel)]="displaySettings.currency">
+                      <option *ngFor="let currency of currencyOptions" [value]="currency.value">
+                        {{ currency.label }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <h4><i class="fas fa-clock"></i> Múi giờ</h4>
+                    <p>Chọn múi giờ hiển thị</p>
+                  </div>
+                  <div class="setting-control">
+                    <select class="form-control" [(ngModel)]="displaySettings.timezone">
+                      <option *ngFor="let tz of timezoneOptions" [value]="tz.value">
+                        {{ tz.label }}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Display Options -->
+            <div class="settings-section">
+              <h3>Tùy chọn hiển thị</h3>
+              <div class="settings-group">
+                
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <h4><i class="fas fa-list"></i> Số item mỗi trang</h4>
+                    <p>Số lượng sản phẩm hiển thị mỗi trang</p>
+                  </div>
+                  <div class="setting-control">
+                    <select class="form-control" [(ngModel)]="displaySettings.itemsPerPage">
+                      <option *ngFor="let num of itemsPerPageOptions" [value]="num">
+                        {{ num }} items
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Data Tab -->
+        <div *ngIf="activeTab === 'data'" class="settings-tab">
+          <div class="tab-header">
+            <h2><i class="fas fa-database"></i> Quản lý dữ liệu</h2>
+            <p>Sao lưu, khôi phục và quản lý dữ liệu cá nhân</p>
+          </div>
+
+          <div class="settings-sections">
+            
+            <!-- Backup & Restore -->
+            <div class="settings-section">
+              <h3>Sao lưu & Khôi phục</h3>
+              <div class="settings-group">
+                
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <h4><i class="fas fa-download"></i> Xuất cài đặt</h4>
+                    <p>Tải về file backup chứa tất cả cài đặt</p>
+                  </div>
+                  <div class="setting-control">
+                    <button class="btn btn-primary btn-sm" (click)="exportSettings()">
+                      <i class="fas fa-download"></i> Xuất
+                    </button>
+                  </div>
+                </div>
+
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <h4><i class="fas fa-upload"></i> Nhập cài đặt</h4>
+                    <p>Khôi phục cài đặt từ file backup</p>
+                  </div>
+                  <div class="setting-control">
+                    <input type="file" 
+                           accept=".json" 
+                           (change)="importSettings($event)"
+                           #fileInput
+                           style="display: none;">
+                    <button class="btn btn-outline btn-sm" 
+                            (click)="fileInput.click()">
+                      <i class="fas fa-upload"></i> Nhập
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Data Management -->
+            <div class="settings-section">
+              <h3>Quản lý dữ liệu</h3>
+              <div class="settings-group">
+                
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <h4><i class="fas fa-broom"></i> Xóa bộ nhớ đệm</h4>
+                    <p>Xóa các file tạm và dữ liệu cache</p>
+                  </div>
+                  <div class="setting-control">
+                    <button class="btn btn-warning btn-sm" (click)="clearCache()">
+                      <i class="fas fa-trash"></i> Xóa Cache
+                    </button>
+                  </div>
+                </div>
+
+                <div class="setting-item">
+                  <div class="setting-info">
+                    <h4><i class="fas fa-history"></i> Xóa lịch sử</h4>
+                    <p>Xóa lịch sử duyệt web và tìm kiếm</p>
+                  </div>
+                  <div class="setting-control">
+                    <button class="btn btn-warning btn-sm" (click)="clearHistory()">
+                      <i class="fas fa-trash"></i> Xóa lịch sử
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="settings-actions" *ngIf="!isLoading">
+        <button class="btn btn-primary btn-lg" 
+                (click)="saveSettings()"
+                [disabled]="isSaving">
+          <i class="fas fa-spinner fa-spin" *ngIf="isSaving"></i>
+          <i class="fas fa-save" *ngIf="!isSaving"></i>
+          {{ isSaving ? 'Đang lưu...' : 'Lưu cài đặt' }}
+        </button>
+
+        <button class="btn btn-outline btn-lg" 
+                (click)="resetToDefault()"
+                [disabled]="isSaving">
+          <i class="fas fa-undo"></i> Khôi phục mặc định
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+</div>
