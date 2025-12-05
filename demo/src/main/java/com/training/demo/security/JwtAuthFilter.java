@@ -1,8 +1,8 @@
 package com.training.demo.security;
 
-import com.training.demo.config.SecurityConfig;
 import com.training.demo.exception.TokenException;
 import com.training.demo.service.RedisService;
+import com.training.demo.utils.constants.SecurityConstants;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,7 +33,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        return Arrays.stream(SecurityConfig.PUBLIC_URL)
+        return Arrays.stream(SecurityConstants.Endpoints.PUBLIC_ENDPOINTS)
                 .anyMatch(pattern -> pathMatcher.match(pattern, path));
     }
 
@@ -41,18 +41,18 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
                                     @NonNull FilterChain filterChain) throws ServletException, IOException {
-        log.info("======== JwtAuthFilter Running ========");
+        log.debug("======== JwtAuthFilter Running for: {} ========", request.getRequestURI());
 
-        String header = request.getHeader("Authorization");
-        if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring(7);
+        String header = request.getHeader(SecurityConstants.Headers.AUTHORIZATION);
+        if (header != null && header.startsWith(SecurityConstants.Headers.BEARER_PREFIX)) {
+            String token = header.substring(SecurityConstants.Headers.BEARER_PREFIX.length());
 
             try {
                 // validate token
                 if (jwtTokenProvider.validateToken(token, true)) {
                     String username = jwtTokenProvider.getUsernameFromToken(token, true);
 
-                    String redisKey = "access:" + username;
+                    String redisKey = SecurityConstants.RedisKeys.ACCESS_TOKEN_PREFIX + username;
                     var accessValue = redisService.get(redisKey, String.class);
 
                     if (accessValue.isEmpty() || !accessValue.get().equals(token)) {

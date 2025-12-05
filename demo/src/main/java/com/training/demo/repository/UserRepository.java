@@ -14,11 +14,21 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
 
     /**
-     * Tìm người dùng theo tên đăng nhập
+     * Tìm người dùng theo tên đăng nhập với roles
      * @param username username của người dùng
      * @return Optional<User> nếu tìm thấy, Optional.empty() nếu không tìm thấy
      */
+    @EntityGraph(value = "User.withRoles", type = EntityGraph.EntityGraphType.FETCH)
     Optional<User> findByUsername(String username);
+    
+    /**
+     * Tìm người dùng theo ID với roles
+     * @param id ID của người dùng
+     * @return Optional<User> nếu tìm thấy
+     */
+    @EntityGraph(value = "User.withRoles", type = EntityGraph.EntityGraphType.FETCH)
+    @Query("SELECT u FROM User u WHERE u.id = :id")
+    Optional<User> findByIdWithRoles(@Param("id") Long id);
 
     /**
      * Tìm người dùng theo email

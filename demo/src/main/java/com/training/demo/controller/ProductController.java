@@ -6,6 +6,9 @@ import com.training.demo.dto.response.Product.ProductResponse;
 import com.training.demo.dto.response.System.BaseResponse;
 import com.training.demo.dto.response.System.PageResponse;
 import com.training.demo.service.ProductService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +18,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.List;
@@ -23,6 +27,7 @@ import java.util.List;
 @RequestMapping("/api/products")
 @Slf4j
 @RequiredArgsConstructor
+@Validated
 public class ProductController {
 
     private final ProductService productService;
@@ -67,14 +72,15 @@ public class ProductController {
 
     /**
      * Get all products with pagination
-     * @param pageNumber page number
-     * @param pageSize page size
+     * @param pageNumber page number (min: 0)
+     * @param pageSize page size (min: 1, max: 100)
      * @return paginated product responses
      */
     @GetMapping
-    public ResponseEntity<?> getAll(@RequestParam(defaultValue = "0") int pageNumber,
-                                    @RequestParam(defaultValue = "12") int pageSize) {
-        log.info("[Product] Get all products");
+    public ResponseEntity<?> getAll(
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "Page number must be >= 0") int pageNumber,
+            @RequestParam(defaultValue = "12") @Min(value = 1, message = "Page size must be >= 1") @Max(value = 100, message = "Page size must be <= 100") int pageSize) {
+        log.info("[Product] Get all products - page: {}, size: {}", pageNumber, pageSize);
         return ResponseEntity.ok(BaseResponse.success(productService.getAllProducts(pageNumber, pageSize)));
     }
 

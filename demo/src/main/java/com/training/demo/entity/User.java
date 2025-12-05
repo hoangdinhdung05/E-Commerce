@@ -10,6 +10,18 @@ import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "tbl_user")
+@NamedEntityGraph(
+    name = "User.withRoles",
+    attributeNodes = {
+        @NamedAttributeNode(value = "userHasRoles", subgraph = "roles-subgraph")
+    },
+    subgraphs = {
+        @NamedSubgraph(
+            name = "roles-subgraph",
+            attributeNodes = @NamedAttributeNode("role")
+        )
+    }
+)
 @Builder
 @Getter
 @Setter
@@ -42,7 +54,7 @@ public class User extends BaseEntity {
 
     @OneToMany(
             cascade = CascadeType.ALL,
-            fetch = FetchType.EAGER,
+            fetch = FetchType.LAZY,
             mappedBy = "user",
             orphanRemoval = true
     )
