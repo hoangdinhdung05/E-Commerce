@@ -45,13 +45,25 @@ public final class ApiConstants {
         
         // User messages
         public static final String USER_NOT_FOUND = "User not found";
+        public static final String USER_NOT_FOUND_ID = "User with ID %s not found";
         public static final String USER_ALREADY_EXISTS = "User already exists";
         public static final String EMAIL_ALREADY_EXISTS = "Email already exists";
         public static final String USERNAME_ALREADY_EXISTS = "Username already exists";
+        public static final String USERNAME_EXISTS = "Username already exists";
+        public static final String EMAIL_EXISTS = "Email already exists";
+        public static final String USER_INACTIVE = "User account is inactive";
+        public static final String USER_BANNED = "User account has been banned";
+        public static final String INVALID_OLD_PASSWORD = "Invalid old password";
         
         // Product messages
-        public static final String PRODUCT_NOT_FOUND = "Product not found";
+        public static final String PRODUCT_NOT_FOUND = "Product with ID %s not found";
         public static final String INSUFFICIENT_STOCK = "Insufficient stock";
+        
+        // Category messages
+        public static final String CATEGORY_NOT_FOUND = "Category with ID %s not found";
+        
+        // Role messages
+        public static final String ROLE_NOT_FOUND = "Role not found";
         
         // Order messages
         public static final String ORDER_NOT_FOUND = "Order not found";

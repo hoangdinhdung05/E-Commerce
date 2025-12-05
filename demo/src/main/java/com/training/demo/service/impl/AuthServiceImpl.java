@@ -1,33 +1,28 @@
 package com.training.demo.service.impl;
 
+import com.training.demo.application.usecase.auth.LoginUseCase;
+import com.training.demo.application.usecase.auth.RegisterUseCase;
 import com.training.demo.dto.request.Auth.LoginRequest;
 import com.training.demo.dto.request.Auth.LogoutRequest;
 import com.training.demo.dto.request.Auth.RegisterRequest;
 import com.training.demo.dto.request.Auth.EmailOtpRequest;
 import com.training.demo.dto.request.Otp.SendOtpRequest;
 import com.training.demo.dto.response.Auth.AuthResponse;
+import com.training.demo.dto.response.Auth.LoginResponse;
 import com.training.demo.entity.User;
 import com.training.demo.exception.BadRequestException;
 import com.training.demo.exception.NotFoundException;
 import com.training.demo.exception.TokenException;
 import com.training.demo.repository.UserRepository;
-import com.training.demo.security.CustomUserDetails;
 import com.training.demo.security.JwtProvider;
 import com.training.demo.service.AuthService;
 import com.training.demo.service.OtpService;
 import com.training.demo.service.RedisService;
-import com.training.demo.service.UserService;
 import com.training.demo.utils.enums.OtpType;
 import com.training.demo.utils.enums.UserStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import static com.training.demo.mapper.AuthMapper.toResponse;
 
@@ -37,62 +32,54 @@ import static com.training.demo.mapper.AuthMapper.toResponse;
 public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
-    private final AuthenticationManager authenticationManager;
     private final JwtProvider jwtProvider;
-    private final UserService userService;
     private final RedisService redisService;
     private final OtpService otpService;
+    
+    // Use Cases
+    private final LoginUseCase loginUseCase;
+    private final RegisterUseCase registerUseCase;
 
     /**
-     * Sử dụng cơ chế Spring Security để tiến hành Authenticate User
-     * Sinh accessToken và refreshToken hỗ trợ trong quá trình sử dụng
+     * Authenticate user using Login Use Case
+     * Delegates business logic to Use Case layer
      *
-     * @param request Username(Email)/Password
+     * @param request Username/Password
      * @return AccessToken/RefreshToken
      */
     @Override
     public AuthResponse authenticate(LoginRequest request) {
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            request.getUsername(),
-                            request.getPassword()
-                    )
-            );
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-            User user = userDetails.getUser();
-
-            if (!user.isVerifyEmail() || user.getStatus().equals(UserStatus.INACTIVE)) {
-                throw new BadRequestException("Account is not activated or has been locked");
-            }
-
-            return generateAndStoreTokens(user);
-        } catch (AuthenticationException e) {
-            throw new BadRequestException("Username or password incorrect");
-        }
+        log.info("[AuthService] Authenticating user: {}", request.getUsername());
+        
+        // Delegate to Use Case
+        LoginResponse loginResponse = loginUseCase.execute(request);
+        
+        return toResponse(loginResponse);
     }
 
     /**
-     * Đăng kí tài khoản mới (Gán role mặc định cho account là RoleType.User)
+     * Register new user account using Register Use Case
+     * Delegates business logic to Use Case layer
      *
-     * @param request Thông tin cở bản của Account
+     * @param request Basic account information
      */
     @Override
     public void register(RegisterRequest request) {
-        log.info("[AuthService] Register new account with username: {}", request.getUsername());
-        userService.register(request);
-        log.info("SendMail with OTP to username: {}", request.getUsername());
-
+        log.info("[AuthService] Registering new user: {}", request.getUsername());
+        
+        // Delegate to Use Case
+        User user = registerUseCase.execute(request);
+        
+        // Send OTP for email verification
+        log.info("[AuthService] Sending verification email to: {}", user.getEmail());
         try {
             otpService.sendOtp(SendOtpRequest.builder()
-                            .email(request.getEmail())
+                    .email(user.getEmail())
                     .build(), OtpType.VERIFY_EMAIL);
-            log.info("Sendmail success");
+            log.info("[AuthService] Verification email sent successfully");
         } catch (Exception e) {
-            log.error("Sendmail register error: {}", e.getMessage(), e);
-            throw new BadRequestException("Sendmail register error");
+            log.error("[AuthService] Error sending verification email: {}", e.getMessage(), e);
+            throw new BadRequestException("Could not send verification email");
         }
     }
 
