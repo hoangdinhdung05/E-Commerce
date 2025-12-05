@@ -1,7 +1,9 @@
 package com.training.demo.exception;
 
 import com.training.demo.dto.response.System.BaseResponse;
+import com.training.demo.utils.constants.ApiConstants;
 import io.jsonwebtoken.ExpiredJwtException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -25,10 +27,26 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandle {
 
-    // BaseException do mình custom
+    // DomainException - custom exceptions with error codes
+    @ExceptionHandler(DomainException.class)
+    public ResponseEntity<?> handleDomainException(DomainException ex, HttpServletRequest request) {
+        log.error("[DomainException] {} - Error Code: {} - Path: {}", 
+            ex.getMessage(), ex.getErrorCode(), request.getRequestURI());
+        
+        return ResponseEntity.status(ex.getHttpStatus())
+                .body(BaseResponse.builder()
+                    .success(false)
+                    .message(ex.getMessage())
+                    .errorCode(ex.getErrorCode())
+                    .data(ex.getDetails())
+                    .timestamp(System.currentTimeMillis())
+                    .build());
+    }
+    
+    // BaseException - for backward compatibility
     @ExceptionHandler(BaseException.class)
-    public ResponseEntity<?> handleBaseException(BaseException ex) {
-        log.error("[BaseException] {}", ex.getMessage());
+    public ResponseEntity<?> handleBaseException(BaseException ex, HttpServletRequest request) {
+        log.error("[BaseException] {} - Path: {}", ex.getMessage(), request.getRequestURI());
         return ResponseEntity.status(ex.getStatus())
                 .body(BaseResponse.failure(ex.getMessage(), ex.getErrors()));
     }

@@ -3,6 +3,7 @@ package com.training.demo.config;
 import com.training.demo.security.AuthEntryPointJwt;
 import com.training.demo.security.CustomUserDetailsService;
 import com.training.demo.security.JwtAuthFilter;
+import com.training.demo.utils.constants.SecurityConstants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -34,27 +35,6 @@ public class SecurityConfig {
     private final AuthEntryPointJwt authEntryPointJwt;
     private final PasswordEncoder passwordEncoder;
 
-    public static final String[] PUBLIC_URL = {
-            "/",
-            "/api/auth/register",
-            "/api/auth/login",
-            "/api/auth/refresh-token",
-            "/api/auth/logout",
-            "/api/auth/active",
-            "/api/otp/**",
-            "/api/products",
-            "/api/products/search/**",
-            "/api/categories",
-            "/avatars/**",
-            "/uploads/**",
-            "/products/**",
-            "/avatars/**",
-            "/swagger-ui/**",
-            "/v3/api-docs/**",
-            "/swagger-resources/**",
-            "/webjars/**"
-    };
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -62,7 +42,7 @@ public class SecurityConfig {
                 .cors(withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(PUBLIC_URL).permitAll()
+                        .requestMatchers(SecurityConstants.Endpoints.PUBLIC_ENDPOINTS).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/products/search-category/**").permitAll()
