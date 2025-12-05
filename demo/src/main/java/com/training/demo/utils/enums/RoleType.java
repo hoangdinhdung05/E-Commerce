@@ -10,4 +10,6 @@ public enum RoleType {
     private final int level;
 
     RoleType(int level) { this.level = level; }
+    
+    public int getLevel() { return level; }
 }

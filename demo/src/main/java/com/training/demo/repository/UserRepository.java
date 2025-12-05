@@ -2,10 +2,11 @@ package com.training.demo.repository;
 
 import com.training.demo.dto.response.User.ExportUserResponse;
 import com.training.demo.entity.User;
-import io.lettuce.core.dynamic.annotation.Param;
+import jakarta.persistence.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;

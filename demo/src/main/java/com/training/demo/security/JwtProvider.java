@@ -94,7 +94,7 @@ public class JwtProvider {
             throw new TokenException("Token has expired");
         } catch (MalformedJwtException e) {
             throw new TokenException("Invalid token format");
-        } catch (SignatureException e) {
+        } catch (io.jsonwebtoken.security.SignatureException e) {
             throw new TokenException("Invalid token signature");
         } catch (UnsupportedJwtException e) {
             throw new TokenException("Unsupported token");

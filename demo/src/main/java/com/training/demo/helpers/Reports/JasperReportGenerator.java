@@ -272,7 +272,7 @@ public class JasperReportGenerator {
         // Description
         JRDesignTextField descField = createProductDetailCell(
                 "($F{description} == null) ? \"—\" : $F{description}", dx, 130, 65);
-        descField.setStretchType(StretchTypeEnum.RELATIVE_TO_TALLEST_OBJECT);
+        descField.setStretchType(StretchTypeEnum.ELEMENT_GROUP_HEIGHT);
         descField.setFontSize(9f);
         detailBand.addElement(descField);
         dx += 130;

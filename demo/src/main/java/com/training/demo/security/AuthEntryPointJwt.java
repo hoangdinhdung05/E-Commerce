@@ -2,7 +2,6 @@ package com.training.demo.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.training.demo.dto.response.System.BaseResponse;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;

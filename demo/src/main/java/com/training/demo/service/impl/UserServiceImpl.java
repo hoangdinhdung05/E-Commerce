@@ -314,7 +314,6 @@ public class UserServiceImpl implements UserService {
         try {
 
             var uploadResult = fileService.upload(UploadKind.AVATAR, file, "avatars/");
-            String oldAvatarUrl = user.getAvatarUrl();
             user.setAvatarUrl(uploadResult.getPublicUrl());
             userRepository.save(user);
 

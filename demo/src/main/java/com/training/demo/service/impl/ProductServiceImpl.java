@@ -9,7 +9,6 @@ import com.training.demo.entity.Product;
 import com.training.demo.exception.BadRequestException;
 import com.training.demo.mapper.ProductMapper;
 import com.training.demo.repository.CategoryRepository;
-import com.training.demo.repository.OrderRepository;
 import com.training.demo.repository.ProductRepository;
 import com.training.demo.repository.specification.ProductSpecs;
 import com.training.demo.service.FileService;
@@ -35,7 +34,6 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final FileService fileService;
-    private final OrderRepository orderRepository;
 
     /**
      * Get product by id
@@ -191,14 +189,10 @@ public class ProductServiceImpl implements ProductService {
         if (pageNumber < 0) throw new BadRequestException("Page index must be >= 0");
         if (pageSize <= 0 || pageSize > 200) throw new BadRequestException("Page size must be in range [1, 200]");
 
-        var pageable = org.springframework.data.domain.PageRequest.of(
-                pageNumber, pageSize,
-                org.springframework.data.domain.Sort.by(Sort.Direction.ASC, "createdAt")
-                        .and(org.springframework.data.domain.Sort.by("id"))
-        );
-
-        Page<ProductResponse> productResponses = productRepository.findAll(PageRequest.of(pageNumber, pageSize))
-                .map(ProductMapper::toProductResponse);
+        Page<ProductResponse> productResponses = productRepository.findAll(
+                PageRequest.of(pageNumber, pageSize, 
+                    Sort.by(Sort.Direction.ASC, "createdAt").and(Sort.by("id")))
+        ).map(ProductMapper::toProductResponse);
         return PageResponse.of(productResponses);
     }
 
