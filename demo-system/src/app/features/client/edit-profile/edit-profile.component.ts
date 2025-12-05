@@ -5,13 +5,15 @@ import { AuthService } from '../../../core/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { UserDetailsResponse } from '../../../core/models/response/User/UserDetailsRespomse';
 import { environment } from '../../../../environments/environment';
+import { DestroyableComponent } from '../../../shared/components/base/destroyable.component';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-edit-profile',
   templateUrl: './edit-profile.component.html',
   styleUrls: ['./edit-profile.component.css']
 })
-export class EditProfileComponent implements OnInit {
+export class EditProfileComponent extends DestroyableComponent implements OnInit {
   profileForm!: FormGroup;
   user: UserDetailsResponse | null = null;
   isLoading = false;
@@ -26,6 +28,7 @@ export class EditProfileComponent implements OnInit {
     private authService: AuthService,
     private toastService: ToastService
   ) {
+    super();
     this.initForm();
   }
 
@@ -49,7 +52,9 @@ export class EditProfileComponent implements OnInit {
 
   loadUserProfile(): void {
     this.isLoading = true;
-    this.userService.getCurrentUser().subscribe({
+    this.userService.getCurrentUser()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
       next: (response) => {
         if (response.success && response.data) {
           this.user = response.data;

@@ -1,5 +1,6 @@
 import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { takeUntil } from 'rxjs/operators';
 import { ProductService } from '../../../../core/services/products/product.service';
 import { CartService } from '../../../../core/services/cart/cart.service';
 import { AuthService } from '../../../../core/auth.service';
@@ -10,13 +11,14 @@ import { ToastrService } from 'ngx-toastr';
 import { FilterOptions } from '../product-filter/product-filter.component';
 import { CategoryService } from '../../../../core/services/categories/category.service';
 import { forkJoin } from 'rxjs';
+import { DestroyableComponent } from '../../../../shared/components/base/destroyable.component';
 
 @Component({
   selector: 'app-product-list',
   templateUrl: './product-list.component.html',
   styleUrls: ['./product-list.component.css']
 })
-export class ProductListComponent implements OnInit, OnChanges {
+export class ProductListComponent extends DestroyableComponent implements OnInit, OnChanges {
   @Input() filterOptions: FilterOptions | null = null;
   
   allProducts: ProductResponse[] = [];
@@ -42,22 +44,26 @@ export class ProductListComponent implements OnInit, OnChanges {
     private route: ActivatedRoute,
     private router: Router,
     private categoryService: CategoryService
-  ) { }
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
     // Listen to query params changes
-    this.route.queryParams.subscribe(params => {
-      const searchQuery = params['search'];
-      if (searchQuery) {
-        this.searchProducts(searchQuery);
-      } else if (!this.filterOptions || this.filterOptions.categories.length === 0) {
-        // Only load all products if no filters are active
-        this.loadProducts();
-      } else {
-        // Load with filters
-        this.loadProductsWithFilters();
-      }
-    });
+    this.route.queryParams
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(params => {
+        const searchQuery = params['search'];
+        if (searchQuery) {
+          this.searchProducts(searchQuery);
+        } else if (!this.filterOptions || this.filterOptions.categories.length === 0) {
+          // Only load all products if no filters are active
+          this.loadProducts();
+        } else {
+          // Load with filters
+          this.loadProductsWithFilters();
+        }
+      });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -76,8 +82,10 @@ export class ProductListComponent implements OnInit, OnChanges {
     this.currentPage = page;
     console.log('Loading products, page:', this.currentPage, 'pageSize:', this.pageSize);
     
-    this.productService.getAllProducts(this.currentPage, this.pageSize).subscribe({
-      next: (response) => {
+    this.productService.getAll(this.currentPage, this.pageSize)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+      next: (response: any) => {
         console.log('Product service response:', response);
         if (response.success && response.data) {
           console.log('Products loaded:', response.data.content);
@@ -100,7 +108,7 @@ export class ProductListComponent implements OnInit, OnChanges {
         }
         this.isLoading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error loading products:', error);
         this.isLoading = false;
       }
@@ -124,7 +132,9 @@ export class ProductListComponent implements OnInit, OnChanges {
     this.isSearching = false;
 
     // Load categories first to get category names
-    this.categoryService.getAllCategories(0, 10).subscribe({
+    this.categoryService.getAll(0, 10)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
       next: (catResponse) => {
         if (!catResponse.success || !catResponse.data) {
           this.loadProducts(page);
@@ -147,7 +157,9 @@ export class ProductListComponent implements OnInit, OnChanges {
 
         // For single category, use its pagination directly
         if (categoryRequests.length === 1) {
-          categoryRequests[0].subscribe({
+          categoryRequests[0]
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
             next: (response) => {
               if (response.success && response.data) {
                 const pageData = response.data as any;
@@ -165,7 +177,9 @@ export class ProductListComponent implements OnInit, OnChanges {
           });
         } else {
           // For multiple categories, merge results (pagination becomes approximate)
-          forkJoin(categoryRequests).subscribe({
+          forkJoin(categoryRequests)
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
             next: (responses) => {
               const allProducts: ProductResponse[] = [];
               let totalAvailable = 0;
@@ -303,7 +317,9 @@ export class ProductListComponent implements OnInit, OnChanges {
       quantity: 1
     };
 
-    this.cartService.addToCart(request).subscribe({
+    this.cartService.addToCart(request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
       next: (response) => {
         if (response.success) {
           this.toastr.success(`Đã thêm "${product.name}" vào giỏ hàng`, 'Thành công');
@@ -361,7 +377,9 @@ export class ProductListComponent implements OnInit, OnChanges {
     this.isSearching = true;
     this.searchQuery = name;
 
-    this.productService.searchByName(name).subscribe({
+    this.productService.searchByName(name)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
       next: (res) => {
         if (res.success && res.data) {
           this.displayedProducts = res.data;

@@ -5,13 +5,15 @@ import { AuthService } from 'src/app/core/auth.service';
 import { ToastService } from 'src/app/core/services/toast.service';
 import { OtpService } from 'src/app/core/services/otp/otp.service';
 import { ResendOtpRequest } from 'src/app/core/models/request/Otp/resend-otp-request';
+import { DestroyableComponent } from 'src/app/shared/components/base/destroyable.component';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-active',
   templateUrl: './active.component.html',
   styleUrls: ['./active.component.css']
 })
-export class ActiveComponent implements OnInit {
+export class ActiveComponent extends DestroyableComponent implements OnInit {
 
   activeForm!: FormGroup;
   email!: string;
@@ -26,13 +28,17 @@ export class ActiveComponent implements OnInit {
     private otpService: OtpService,
     private router: Router,
     private toast: ToastService
-  ) {}
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
     // Lấy email từ query param
-    this.route.queryParams.subscribe(params => {
-      this.email = params['email'];
-    });
+    this.route.queryParams
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(params => {
+        this.email = params['email'];
+      });
 
     // Form chỉ có trường OTP
     this.activeForm = this.fb.group({
@@ -40,7 +46,8 @@ export class ActiveComponent implements OnInit {
     });
   }
 
-  ngOnDestroy(): void {
+  override ngOnDestroy(): void {
+    super.ngOnDestroy();
     if (this.countdownInterval) {
       clearInterval(this.countdownInterval);
     }
@@ -57,7 +64,9 @@ export class ActiveComponent implements OnInit {
       otp: this.activeForm.value.otp
     };
 
-    this.authService.active(payload).subscribe({
+    this.authService.active(payload)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
       next: (res) => {
         if (res.success) {
           this.toast.success('Kích hoạt tài khoản thành công! Bạn có thể đăng nhập.');
@@ -89,7 +98,9 @@ export class ActiveComponent implements OnInit {
       type: 'VERIFY_EMAIL'
     };
 
-    this.otpService.resendOtp(request).subscribe({
+    this.otpService.resendOtp(request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
       next: (res) => {
         this.isResending = false;
         if (res.success) {

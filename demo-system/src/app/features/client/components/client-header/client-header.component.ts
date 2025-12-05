@@ -1,7 +1,7 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../../../core/auth.service';
 import { UserService } from '../../../../core/services/users/user.service';
 import { CategoryService } from '../../../../core/services/categories/category.service';
@@ -13,13 +13,14 @@ import { ProductResponse } from '../../../../core/models/response/Product/Produc
 import { CartResponse } from '../../../../core/models/response/Cart/CartResponse';
 import { CartItemResponse } from '../../../../core/models/response/Cart/CartItemResponse';
 import { environment } from '../../../../../environments/environment';
+import { DestroyableComponent } from '../../../../shared/components/base/destroyable.component';
 
 @Component({
   selector: 'app-client-header',
   templateUrl: './client-header.component.html',
   styleUrls: ['./client-header.component.css']
 })
-export class ClientHeaderComponent implements OnInit {
+export class ClientHeaderComponent extends DestroyableComponent implements OnInit {
   isLoggedIn = false;
   user: UserDetailsResponse | null = null;
   isMenuOpen = false;
@@ -51,7 +52,9 @@ export class ClientHeaderComponent implements OnInit {
     private productService: ProductService,
     private cartService: CartService,
     private router: Router
-  ) {}
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
     this.checkAuthStatus();
@@ -62,15 +65,17 @@ export class ClientHeaderComponent implements OnInit {
 
   subscribeToCart(): void {
     // Subscribe to cart changes from CartService
-    this.cartService.cart$.subscribe({
-      next: (cart: CartResponse | null) => {
-        this.cart = cart;
-        this.cartCount = cart?.totalItems || 0;
-      },
-      error: (error: any) => {
-        console.error('Error subscribing to cart:', error);
-      }
-    });
+    this.cartService.cart$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (cart: CartResponse | null) => {
+          this.cart = cart;
+          this.cartCount = cart?.totalItems || 0;
+        },
+        error: (error: any) => {
+          console.error('Error subscribing to cart:', error);
+        }
+      });
 
     // Load initial cart data if user is logged in
     if (this.isLoggedIn) {
@@ -80,19 +85,21 @@ export class ClientHeaderComponent implements OnInit {
 
   loadCart(): void {
     this.isLoadingCart = true;
-    this.cartService.getCart().subscribe({
-      next: (response) => {
-        if (response.success && response.data) {
-          this.cart = response.data;
-          this.cartCount = this.cart.totalItems;
+    this.cartService.getCart()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success && response.data) {
+            this.cart = response.data;
+            this.cartCount = this.cart.totalItems;
+          }
+          this.isLoadingCart = false;
+        },
+        error: (error) => {
+          console.error('Error loading cart:', error);
+          this.isLoadingCart = false;
         }
-        this.isLoadingCart = false;
-      },
-      error: (error) => {
-        console.error('Error loading cart:', error);
-        this.isLoadingCart = false;
-      }
-    });
+      });
   }
 
   setupSearchAutocomplete(): void {
@@ -107,7 +114,8 @@ export class ClientHeaderComponent implements OnInit {
         }
         this.isSearching = true;
         return this.productService.searchByName(query.trim());
-      })
+      }),
+      takeUntil(this.destroy$)
     ).subscribe({
       next: (response) => {
         if (response && response.success && response.data) {
@@ -162,42 +170,46 @@ export class ClientHeaderComponent implements OnInit {
 
   loadCategories(): void {
     this.isLoadingCategories = true;
-    this.categoryService.getAllCategories(0, 20).subscribe({
-      next: (response) => {
-        if (response.success && response.data) {
-          this.categories = response.data.content;
+    this.categoryService.getAll(0, 20)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success && response.data) {
+            this.categories = response.data.content;
+          }
+          this.isLoadingCategories = false;
+        },
+        error: (error) => {
+          console.error('Error loading categories:', error);
+          this.isLoadingCategories = false;
         }
-        this.isLoadingCategories = false;
-      },
-      error: (error) => {
-        console.error('Error loading categories:', error);
-        this.isLoadingCategories = false;
-      }
-    });
+      });
   }
 
   loadCurrentUser(): void {
     this.isLoadingUser = true;
-    this.userService.getCurrentUser().subscribe({
-      next: (response) => {
-        if (response.success && response.data) {
-          this.user = response.data;
-          this.avatarUrl = this.getAvatarUrl(this.user.avatarUrl);
-          this.userInitial = this.user.firstName?.charAt(0) || this.user.username?.charAt(0) || 'U';
-        }
-        this.isLoadingUser = false;
-      },
-      error: (error) => {
-        console.error('Error loading current user:', error);
-        // Fallback to basic user info from token
-        const userId = this.authService.getUserId();
-        const roles = this.authService.getRoles();
-        if (userId) {
-          this.user = { 
-            id: userId, 
-            username: 'User',
-            firstName: 'User',
-            lastName: '',
+    this.userService.getCurrentUser()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success && response.data) {
+            this.user = response.data;
+            this.avatarUrl = this.getAvatarUrl(this.user.avatarUrl);
+            this.userInitial = this.user.firstName?.charAt(0) || this.user.username?.charAt(0) || 'U';
+          }
+          this.isLoadingUser = false;
+        },
+        error: (error) => {
+          console.error('Error loading current user:', error);
+          // Fallback to basic user info from token
+          const userId = this.authService.getUserId();
+          const roles = this.authService.getRoles();
+          if (userId) {
+            this.user = { 
+              id: userId, 
+              username: 'User',
+              firstName: 'User',
+              lastName: '',
             email: '',
             status: '',
             verifyEmail: false,

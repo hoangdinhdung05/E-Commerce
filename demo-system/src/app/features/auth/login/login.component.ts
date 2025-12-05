@@ -1,10 +1,12 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { takeUntil } from 'rxjs/operators';
 import { AuthService } from 'src/app/core/auth.service';
 import { CartService } from 'src/app/core/services/cart/cart.service';
 import { LoginRequest } from 'src/app/core/models/request/login-request';
 import { ToastrService } from 'ngx-toastr';
+import { DestroyableComponent } from 'src/app/shared/components/base/destroyable.component';
  
 
 @Component({
@@ -12,7 +14,7 @@ import { ToastrService } from 'ngx-toastr';
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
-export class LoginComponent {
+export class LoginComponent extends DestroyableComponent {
   loginForm: FormGroup;
 
   constructor(
@@ -22,6 +24,7 @@ export class LoginComponent {
     private router: Router,
     private toastr: ToastrService
   ) {
+    super();
     this.loginForm = this.fb.group({
       username: ['', [Validators.required]],
       password: ['', [Validators.required, Validators.minLength(6)]]
@@ -36,8 +39,10 @@ export class LoginComponent {
     }
 
     const request: LoginRequest = this.loginForm.value;
-    this.authService.login(request).subscribe({
-      next: (response) => {
+    this.authService.login(request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
         const access_token = response.data.accessToken;
         const refresh_token = response.data.refreshToken;
         // AuthService.login() already saves tokens via tap; use helper to read roles

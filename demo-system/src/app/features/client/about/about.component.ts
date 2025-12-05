@@ -2,13 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { UserService } from '../../../core/services/users/user.service';
 import { UserResponse } from '../../../core/models/response/User/user-response';
 import { environment } from '../../../../environments/environment';
+import { DestroyableComponent } from '../../../shared/components/base/destroyable.component';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-about',
   templateUrl: './about.component.html',
   styleUrls: ['./about.component.css']
 })
-export class AboutComponent implements OnInit {
+export class AboutComponent extends DestroyableComponent implements OnInit {
   isLoadingTeam = true;
   
   // Mock data - sẽ thay bằng API call sau
@@ -61,7 +63,9 @@ export class AboutComponent implements OnInit {
     { year: '2024', title: 'Dẫn đầu', description: 'Trở thành top 3 nền tảng thương mại điện tử tại Việt Nam' }
   ];
 
-  constructor(private userService: UserService) { }
+  constructor(private userService: UserService) {
+    super();
+  }
 
   ngOnInit(): void {
     this.loadAdminTeam();
@@ -70,7 +74,9 @@ export class AboutComponent implements OnInit {
   loadAdminTeam(): void {
     this.isLoadingTeam = true;
     // Lấy tất cả users và lọc ra những người có role ADMIN
-    this.userService.getAllUsers(0, 100).subscribe({
+    this.userService.getAll(0, 100)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
       next: (response) => {
         if (response.success && response.data) {
           const allUsers = response.data.content;

@@ -1,17 +1,19 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { Router } from '@angular/router';
+import { takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../../core/auth.service';
 import { UserService } from '../../../core/services/users/user.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ChangePasswordRequest } from '../../../core/models/request/Users/ChangePasswordRequest';
+import { DestroyableComponent } from '../../../shared/components/base/destroyable.component';
 
 @Component({
   selector: 'app-change-password',
   templateUrl: './change-password.component.html',
   styleUrls: ['./change-password.component.css']
 })
-export class ChangePasswordComponent implements OnInit {
+export class ChangePasswordComponent extends DestroyableComponent implements OnInit {
   changePasswordForm!: FormGroup;
   isLoading = false;
   showCurrentPassword = false;
@@ -33,6 +35,7 @@ export class ChangePasswordComponent implements OnInit {
     private toastService: ToastService,
     private router: Router
   ) {
+    super();
     this.initForm();
   }
 
@@ -47,9 +50,11 @@ export class ChangePasswordComponent implements OnInit {
     }, { validators: this.passwordMatchValidator });
 
     // Watch new password changes to update requirements
-    this.changePasswordForm.get('newPassword')?.valueChanges.subscribe(password => {
-      this.updatePasswordRequirements(password || '');
-    });
+    this.changePasswordForm.get('newPassword')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(password => {
+        this.updatePasswordRequirements(password || '');
+      });
   }
 
   strongPasswordValidator(control: AbstractControl): { [key: string]: any } | null {
@@ -114,25 +119,27 @@ export class ChangePasswordComponent implements OnInit {
         confirmPassword: formData.confirmPassword
       };
       
-      this.userService.changePassword(request).subscribe({
-        next: (response) => {
-          if (response.success) {
-            this.toastService.success('Đổi mật khẩu thành công! Vui lòng đăng nhập lại');
-            this.changePasswordForm.reset();
-            
-            // Logout and redirect to login
-            setTimeout(() => {
-              localStorage.removeItem('access_token');
-              localStorage.removeItem('refresh_token');
-              this.router.navigate(['/auth/login']);
-            }, 1500);
-          } else {
-            this.toastService.error(response.message || 'Đổi mật khẩu thất bại');
-          }
-          this.isLoading = false;
-        },
-        error: (error) => {
-          console.error('Error changing password:', error);
+      this.userService.changePassword(request)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            if (response.success) {
+              this.toastService.success('Đổi mật khẩu thành công! Vui lòng đăng nhập lại');
+              this.changePasswordForm.reset();
+              
+              // Logout and redirect to login
+              setTimeout(() => {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                this.router.navigate(['/auth/login']);
+              }, 1500);
+            } else {
+              this.toastService.error(response.message || 'Đổi mật khẩu thất bại');
+            }
+            this.isLoading = false;
+          },
+          error: (error) => {
+            console.error('Error changing password:', error);
           const errorMessage = error.error?.message || 'Có lỗi xảy ra khi đổi mật khẩu';
           this.toastService.error(errorMessage);
           this.isLoading = false;

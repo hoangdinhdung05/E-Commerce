@@ -6,7 +6,8 @@ import { CategoryService } from 'src/app/core/services/categories/category.servi
 import { UploadService } from 'src/app/core/services/upload/upload.service';
 import { environment } from 'src/environments/environment';
 import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { DestroyableComponent } from 'src/app/shared/components/base/destroyable.component';
 
 declare var bootstrap: any;
 
@@ -15,7 +16,7 @@ declare var bootstrap: any;
   templateUrl: './product.component.html',
   styleUrls: ['./product.component.css']
 })
-export class ProductComponent implements OnInit {
+export class ProductComponent extends DestroyableComponent implements OnInit {
 
   products: any[] = [];
   filteredProducts: any[] = [];
@@ -55,7 +56,9 @@ export class ProductComponent implements OnInit {
     private fb: FormBuilder,
     private categoryService: CategoryService,
     private uploadService: UploadService
-  ) { }
+  ) {
+    super();
+  }
 
   imageUrl(product: any) {
     return `${environment.assetBase}${product.productImageUrl}`;
@@ -84,7 +87,8 @@ export class ProductComponent implements OnInit {
     // Setup debounced search
     this.searchSubject.pipe(
       debounceTime(400), // Chờ 400ms sau khi người dùng ngừng gõ
-      distinctUntilChanged() // Chỉ gọi API khi giá trị thay đổi
+      distinctUntilChanged(), // Chỉ gọi API khi giá trị thay đổi
+      takeUntil(this.destroy$)
     ).subscribe(searchText => {
       this.performSearch(searchText);
     });
@@ -92,21 +96,25 @@ export class ProductComponent implements OnInit {
 
   loadCategoryOptions() {
     // load many categories (page 0, large pageSize) to fill select options
-    this.categoryService.getAllCategories(0, 1000).subscribe({
-      next: (res) => {
-        if (res.success) {
-          this.categoryOptions = res.data.content || [];
+    this.categoryService.getAll(0, 1000)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          if (res.success) {
+            this.categoryOptions = res.data.content || [];
+          }
+        },
+        error: (err) => {
+          console.error('Error loading category options', err);
         }
-      },
-      error: (err) => {
-        console.error('Error loading category options', err);
-      }
-    });
+      });
   }
 
   loadProducts(page: number) {
     this.loading = true;
-    this.productService.getAllProducts(page, this.pageSize).subscribe({
+    this.productService.getAll(page, this.pageSize)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
       next: (response) => {
         if (response.success) {
           this.products = response.data.content;
@@ -198,7 +206,7 @@ export class ProductComponent implements OnInit {
     
     // Gọi API search theo tên
     this.loading = true;
-    this.productService.searchByName(searchText).subscribe({
+    this.productService.searchByName(searchText).pipe(takeUntil(this.destroy$)).subscribe({
       next: (response) => {
         if (response.success) {
           this.filteredProducts = response.data;
@@ -245,7 +253,7 @@ export class ProductComponent implements OnInit {
     // Lấy tên sản phẩm từ ô tìm kiếm (nếu có)
     const productName = this.searchText.trim() || undefined;
     
-    this.productService.exportProductReport(productName).subscribe({
+    this.productService.exportProductReport(productName).pipe(takeUntil(this.destroy$)).subscribe({
       next: (blob) => {
         const file = new Blob([blob], { type: 'application/pdf' });
         const fileURL = URL.createObjectURL(file);
@@ -347,7 +355,7 @@ export class ProductComponent implements OnInit {
 
     // Bước 1: Upload ảnh trước
     this.toastr.info('Đang upload ảnh...', 'Xử lý');
-    this.uploadService.uploadProductImage(this.imageFile).subscribe({
+    this.uploadService.uploadProductImage(this.imageFile).pipe(takeUntil(this.destroy$)).subscribe({
       next: uploadRes => {
         console.log('Upload success:', uploadRes);
         
@@ -365,7 +373,7 @@ export class ProductComponent implements OnInit {
 
         console.log('Create product request:', request);
 
-        this.productService.createProduct(request).subscribe({
+        this.productService.create(request).pipe(takeUntil(this.destroy$)).subscribe({
           next: res => {
             if (res.success) {
               this.toastr.success('Tạo sản phẩm thành công!', 'Thành công');
@@ -439,7 +447,7 @@ export class ProductComponent implements OnInit {
     // Nếu có chọn ảnh mới, upload ảnh trước
     if (this.editImageFile) {
       this.toastr.info('Đang upload ảnh mới...', 'Xử lý');
-      this.uploadService.uploadProductImage(this.editImageFile).subscribe({
+      this.uploadService.uploadProductImage(this.editImageFile).pipe(takeUntil(this.destroy$)).subscribe({
         next: uploadRes => {
           console.log('Upload new image success:', uploadRes);
           
@@ -465,7 +473,7 @@ export class ProductComponent implements OnInit {
   }
 
   private updateProductData(request: any) {
-    this.productService.updateProduct(this.selectedProduct.id, request).subscribe({
+    this.productService.update(this.selectedProduct.id, request).pipe(takeUntil(this.destroy$)).subscribe({
       next: res => {
         this.toastr.success('Cập nhật sản phẩm thành công!', 'Thành công');
         this.closeEditModal();
@@ -495,7 +503,7 @@ export class ProductComponent implements OnInit {
   confirmDeleteProduct() {
     if (!this.productToDelete) return;
 
-    this.productService.deleteProduct(this.productToDelete.id).subscribe({
+    this.productService.delete(this.productToDelete.id).pipe(takeUntil(this.destroy$)).subscribe({
       next: res => {
         if (res.success) {
           this.toastr.success('Xóa sản phẩm thành công!', 'Thành công');
@@ -519,7 +527,7 @@ export class ProductComponent implements OnInit {
 
   // === DETAILS PRODUCT ===
   openDetailsModal(productId: number) {
-    this.productService.getProductDetails(productId).subscribe({
+    this.productService.getDetails(productId).pipe(takeUntil(this.destroy$)).subscribe({
       next: res => {
         if (res.success) {
           this.selectedProductDetails = res.data;

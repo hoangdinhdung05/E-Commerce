@@ -3,13 +3,15 @@ import { PaymentService } from '../../../core/services/payments/payment.service'
 import { PaymentResponse } from '../../../core/models/response/Payment/PaymentResponse';
 import { PaymentStatus } from '../../../utils/PaymentStatus';
 import { ToastrService } from 'ngx-toastr';
+import { takeUntil } from 'rxjs/operators';
+import { DestroyableComponent } from '../../../shared/components/base/destroyable.component';
 
 @Component({
   selector: 'app-payments',
   templateUrl: './payments.component.html',
   styleUrls: ['./payments.component.css']
 })
-export class PaymentsComponent implements OnInit {
+export class PaymentsComponent extends DestroyableComponent implements OnInit {
   payments: PaymentResponse[] = [];
   filteredPayments: PaymentResponse[] = [];
   loading = false;
@@ -30,7 +32,9 @@ export class PaymentsComponent implements OnInit {
   constructor(
     private paymentService: PaymentService,
     private toastr: ToastrService
-  ) {}
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
     this.loadPayments();
@@ -39,6 +43,7 @@ export class PaymentsComponent implements OnInit {
   loadPayments(): void {
     this.loading = true;
     this.paymentService.getAllPayments(this.currentPage, this.pageSize, this.sortBy, this.sortDirection)
+      .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           if (response.success && response.data) {
@@ -75,17 +80,19 @@ export class PaymentsComponent implements OnInit {
   exportPaymentReport(): void {
     this.toastr.info('Đang tạo báo cáo thanh toán...', 'Thông báo');
     
-    this.paymentService.exportPaymentsAsync().subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.toastr.success('Yêu cầu xuất báo cáo đã được gửi. Bạn sẽ nhận được email khi file sẵn sàng.', 'Thành công');
+    this.paymentService.exportPaymentsAsync()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.toastr.success('Yêu cầu xuất báo cáo đã được gửi. Bạn sẽ nhận được email khi file sẵn sàng.', 'Thành công');
+          }
+        },
+        error: (error) => {
+          console.error('Error requesting payment report export:', error);
+          this.toastr.error('Không thể gửi yêu cầu xuất báo cáo', 'Lỗi');
         }
-      },
-      error: (error) => {
-        console.error('Error requesting payment report export:', error);
-        this.toastr.error('Không thể gửi yêu cầu xuất báo cáo', 'Lỗi');
-      }
-    });
+      });
   }
 
   onPageChange(page: number): void {
@@ -126,6 +133,7 @@ export class PaymentsComponent implements OnInit {
     };
 
     this.paymentService.confirmPayment(payment.id, confirmRequest)
+      .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           if (response.success) {
@@ -151,6 +159,7 @@ export class PaymentsComponent implements OnInit {
     };
 
     this.paymentService.confirmPayment(payment.id, confirmRequest)
+      .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           if (response.success) {
@@ -181,6 +190,7 @@ export class PaymentsComponent implements OnInit {
     };
 
     this.paymentService.confirmPayment(payment.id, confirmRequest)
+      .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           if (response.success) {

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { takeUntil } from 'rxjs/operators';
 import { CartService } from '../../../core/services/cart/cart.service';
 import { OrderService } from '../../../core/services/orders/order.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -10,13 +11,14 @@ import { CheckoutCartRequest } from '../../../core/models/request/Order/Checkout
 import { PaymentMethod } from '../../../utils/PaymentMethod';
 import { ReactiveFormsModule } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
+import { DestroyableComponent } from '../../../shared/components/base/destroyable.component';
 
 @Component({
   selector: 'app-checkout',
   templateUrl: './checkout.component.html',
   styleUrls: ['./checkout.component.css']
 })
-export class CheckoutComponent implements OnInit {
+export class CheckoutComponent extends DestroyableComponent implements OnInit {
   cart: CartResponse | null = null;
   checkoutForm!: FormGroup;
   isLoading = false;
@@ -37,7 +39,9 @@ export class CheckoutComponent implements OnInit {
     private orderService: OrderService,
     private toastService: ToastService,
     private router: Router
-  ) {}
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
     this.initForm();
@@ -66,18 +70,20 @@ export class CheckoutComponent implements OnInit {
   private loadCart(): void {
     this.isLoading = true;
     
-    this.cartService.cart$.subscribe({
-      next: (cart) => {
-        this.cart = cart;
-        this.isLoading = false;
+    this.cartService.cart$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (cart) => {
+          this.cart = cart;
+          this.isLoading = false;
 
-        // Redirect if cart is empty
-        if (!cart || cart.totalItems === 0) {
-          this.toastService.warning('Giỏ hàng trống. Vui lòng thêm sản phẩm vào giỏ hàng');
-          this.router.navigate(['/cart']);
-        }
-      },
-      error: (err) => {
+          // Redirect if cart is empty
+          if (!cart || cart.totalItems === 0) {
+            this.toastService.warning('Giỏ hàng trống. Vui lòng thêm sản phẩm vào giỏ hàng');
+            this.router.navigate(['/cart']);
+          }
+        },
+        error: (err) => {
         console.error('Error loading cart:', err);
         this.isLoading = false;
         this.toastService.error('Không thể tải giỏ hàng');
@@ -103,25 +109,27 @@ export class CheckoutComponent implements OnInit {
     this.isSubmitting = true;
     const request: CheckoutCartRequest = this.checkoutForm.value;
 
-    this.orderService.checkoutCart(request).subscribe({
-      next: (response) => {
-        this.toastService.success(
-          `Đặt hàng thành công! Mã đơn hàng: ${response.data.orderNumber}`
-        );
-        
-        // Clear cart
-        this.cartService.refreshCart();
-        
-        // Redirect to order detail or success page
-        this.router.navigate(['/orders', response.data.orderNumber]);
-      },
-      error: (err) => {
-        console.error('Checkout error:', err);
-        const errorMessage = err.error?.message || 'Đã có lỗi xảy ra khi đặt hàng';
-        this.toastService.error(errorMessage);
-        this.isSubmitting = false;
-      }
-    });
+    this.orderService.checkoutCart(request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.toastService.success(
+            `Đặt hàng thành công! Mã đơn hàng: ${response.data.orderNumber}`
+          );
+          
+          // Clear cart
+          this.cartService.refreshCart();
+          
+          // Redirect to order detail or success page
+          this.router.navigate(['/orders', response.data.orderNumber]);
+        },
+        error: (err) => {
+          console.error('Checkout error:', err);
+          const errorMessage = err.error?.message || 'Đã có lỗi xảy ra khi đặt hàng';
+          this.toastService.error(errorMessage);
+          this.isSubmitting = false;
+        }
+      });
   }
 
   /**

@@ -1,8 +1,10 @@
 import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { takeUntil } from 'rxjs/operators';
 import { CategoryService } from '../../../../core/services/categories/category.service';
 import { CategoryResponse } from '../../../../core/models/response/Category/CategoryResponse';
 import { ProductService } from 'src/app/core/services/products/product.service';
 import { forkJoin } from 'rxjs';
+import { DestroyableComponent } from '../../../../shared/components/base/destroyable.component';
 
 export interface FilterOptions {
   categories: number[];
@@ -20,7 +22,7 @@ interface CategoryWithCount extends CategoryResponse {
   templateUrl: './product-filter.component.html',
   styleUrls: ['./product-filter.component.css']
 })
-export class ProductFilterComponent implements OnInit {
+export class ProductFilterComponent extends DestroyableComponent implements OnInit {
   @Output() filterChange = new EventEmitter<FilterOptions>();
 
   categories: CategoryWithCount[] = [];
@@ -43,7 +45,9 @@ export class ProductFilterComponent implements OnInit {
   constructor(
     private categoryService: CategoryService,
     private productService: ProductService
-  ) { }
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
     this.loadCategories();
@@ -54,7 +58,9 @@ export class ProductFilterComponent implements OnInit {
     this.isLoadingCategories = true;
     console.log('Loading categories for filter...');
     
-    this.categoryService.getAllCategories(0, 10).subscribe({
+    this.categoryService.getAll(0, 10)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
       next: (response) => {
         console.log('Category service response:', response);
         if (response.success && response.data) {

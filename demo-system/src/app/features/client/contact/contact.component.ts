@@ -4,13 +4,15 @@ import { ToastrService } from 'ngx-toastr';
 import { UserService } from '../../../core/services/users/user.service';
 import { UserDetailsResponse } from '../../../core/models/response/User/UserDetailsRespomse';
 import { environment } from '../../../../environments/environment';
+import { DestroyableComponent } from '../../../shared/components/base/destroyable.component';
+import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-contact',
   templateUrl: './contact.component.html',
   styleUrls: ['./contact.component.css']
 })
-export class ContactComponent implements OnInit {
+export class ContactComponent extends DestroyableComponent implements OnInit {
   contactForm!: FormGroup;
   isSubmitting = false;
   isLoadingAdmin = true;
@@ -84,7 +86,9 @@ export class ContactComponent implements OnInit {
     private fb: FormBuilder,
     private toastr: ToastrService,
     private userService: UserService
-  ) { }
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
     this.initForm();
@@ -94,13 +98,15 @@ export class ContactComponent implements OnInit {
   loadAdminContact(): void {
     this.isLoadingAdmin = true;
     // Lấy danh sách users và tìm admin đầu tiên (giả sử ID = 1 hoặc username = admin)
-    // Vì UserResponse không có roles, ta sẽ dùng getUserDetails với ID cố định
-    this.userService.getUserDetails(1).subscribe({
+    // Vì UserResponse không có roles, ta sẽ dùng getDetails với ID cố định
+    this.userService.getDetails(1)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
       next: (response) => {
         if (response.success && response.data) {
-          this.adminUser = response.data;
+          this.adminUser = response.data as UserDetailsResponse;
           // Cập nhật thông tin liên hệ từ admin
-          if (this.adminUser.email) {
+          if (this.adminUser?.email) {
             this.contactInfo.email = this.adminUser.email;
             this.contactInfo.phone = '+84 123 456 789'; // Hardcode vì API không có phone
           }

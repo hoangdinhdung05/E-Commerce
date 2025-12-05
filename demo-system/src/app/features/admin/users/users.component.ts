@@ -3,6 +3,8 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UserService } from 'src/app/core/services/users/user.service';
 import { AdminCreateUserRequest } from 'src/app/core/models/request/Users/AdminCreateUserRequest';
 import { ToastrService } from 'ngx-toastr';
+import { takeUntil } from 'rxjs/operators';
+import { DestroyableComponent } from 'src/app/shared/components/base/destroyable.component';
 
 declare var bootstrap: any;
 
@@ -11,7 +13,7 @@ declare var bootstrap: any;
   templateUrl: './users.component.html',
   styleUrls: ['./users.component.css']
 })
-export class UsersComponent implements OnInit {
+export class UsersComponent extends DestroyableComponent implements OnInit {
   @ViewChild('createUserModal') createUserModal!: ElementRef;
 
   users: any[] = [];
@@ -45,7 +47,9 @@ export class UsersComponent implements OnInit {
 
   constructor(private userService: UserService, 
     private fb: FormBuilder, 
-    private toastr: ToastrService) {}
+    private toastr: ToastrService) {
+    super();
+  }
 
   ngOnInit(): void {
     this.loadUsers(this.currentPage > 0 && this.filteredUsers.length === 1 
@@ -82,7 +86,7 @@ export class UsersComponent implements OnInit {
   // === API load users ===
   loadUsers(page: number) {
     this.loading = true;
-    this.userService.getAllUsers(page, this.pageSize).subscribe({
+    this.userService.getAll(page, this.pageSize).pipe(takeUntil(this.destroy$)).subscribe({
       next: res => {
         if (res.success) {
           this.users = res.data.content;
@@ -167,7 +171,7 @@ submitCreateUser() {
   const request: AdminCreateUserRequest = this.createUserForm.value;
   this.backendErrors = {}; // reset lỗi cũ
 
-  this.userService.adminCreateUser(request).subscribe({
+  this.userService.create(request).pipe(takeUntil(this.destroy$)).subscribe({
     next: res => {
       this.toastr.success('Tạo user thành công!', 'Thành công');
       this.loadUsers(this.currentPage); // reload bảng
@@ -220,7 +224,7 @@ submitCreateUser() {
     // Lấy username từ ô tìm kiếm (nếu có)
     const username = this.searchText.trim() || undefined;
     
-    this.userService.exportUserReport(username).subscribe({
+    this.userService.exportUserReport(username).pipe(takeUntil(this.destroy$)).subscribe({
       next: (blob) => {
         const file = new Blob([blob], { type: 'application/pdf' });
         const fileURL = URL.createObjectURL(file);
@@ -273,7 +277,7 @@ submitCreateUser() {
     if (this.editUserForm.invalid || !this.selectedUser) return;
 
     const request = this.editUserForm.value;
-    this.userService.updateUser(this.selectedUser.id, request).subscribe({
+    this.userService.update(this.selectedUser.id, request).pipe(takeUntil(this.destroy$)).subscribe({
       next: res => {
         this.toastr.success('Cập nhật người dùng thành công!', 'Thành công');
         this.closeEditModal();
@@ -300,7 +304,7 @@ submitCreateUser() {
   confirmDeleteUser() {
     if (!this.userToDelete) return;
 
-    this.userService.deleteUser(this.userToDelete.id).subscribe({
+    this.userService.delete(this.userToDelete.id).pipe(takeUntil(this.destroy$)).subscribe({
       next: (res) => {
         if (res.success) {
           this.toastr.success('Xóa người dùng thành công!', 'Thành công');
@@ -323,7 +327,7 @@ submitCreateUser() {
   }
 
   openDetailsModal(userId: number) {
-    this.userService.getUserDetails(userId).subscribe({
+    this.userService.getDetails(userId).pipe(takeUntil(this.destroy$)).subscribe({
       next: res => {
         if (res.success) {
           this.selectedUserDetails = res.data;

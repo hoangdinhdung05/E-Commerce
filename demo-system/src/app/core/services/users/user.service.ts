@@ -1,88 +1,72 @@
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { environment } from 'src/environments/environment';
+import { HttpClientService } from '../base/http-client.service';
+import { ResourceService } from '../base/resource.service';
 import { BaseResponse } from '../../models/response/base-response';
-import { PageResponse } from '../../models/response/page-response';
 import { UserResponse } from '../../models/response/User/user-response';
 import { AdminCreateUserRequest } from '../../models/request/Users/AdminCreateUserRequest';
 import { UpdateUserRequest } from '../../models/request/Users/UpdateUserRequest';
 import { UserDetailsResponse } from '../../models/response/User/UserDetailsRespomse';
-import { map } from 'rxjs/operators';
 import { ChangePasswordRequest } from '../../models/request/Users/ChangePasswordRequest';
 
-
+/**
+ * User service extending ResourceService for CRUD operations
+ */
 @Injectable({
   providedIn: 'root'
 })
-export class UserService {
-  private apiUrl = `${environment.apiUrl}/users`;
-  
-  constructor(private http: HttpClient) { }
-
-  getAllUsers(pageNumber: number, pageSize: number): Observable<BaseResponse<PageResponse<UserResponse>>> {
-    const params = new HttpParams()
-      .set('pageNumber', pageNumber)
-      .set('pageSize', pageSize);
-    
-    return this.http.get<BaseResponse<PageResponse<UserResponse>>>(this.apiUrl, { params });
-  }
-
-  getUserDetails(id: number): Observable<BaseResponse<UserDetailsResponse>> {
-    return this.http.get<BaseResponse<UserDetailsResponse>>(`${this.apiUrl}/details/${id}`);
-  }
-
-  getCurrentUser(): Observable<BaseResponse<UserDetailsResponse>> {
-    return this.http.get<BaseResponse<UserDetailsResponse>>(`${this.apiUrl}/current`);
-  }
-
-  adminCreateUser(request: AdminCreateUserRequest): Observable<BaseResponse<any>> {
-    return this.http.post<BaseResponse<any>>(`${this.apiUrl}`, request);
-  }  
-
-  updateUser(id: number, request: UpdateUserRequest): Observable<BaseResponse<any>> {
-    return this.http.patch<BaseResponse<any>>(`${this.apiUrl}/${id}`, request);
-  }
-
-  deleteUser(id: number): Observable<BaseResponse<any>> {
-    return this.http.delete<BaseResponse<any>>(`${this.apiUrl}/${id}`);
-  }
-
-  exportUserReport(username?: string): Observable<Blob> {
-    let params = new HttpParams();
-    if (username && username.trim()) {
-      params = params.set('username', username.trim());
-    }
-    
-    return this.http.get(`${environment.apiUrl}/reports/users`, {
-      params: params,
-      responseType: 'blob'
-    });
-  }
-
-  countUser(): Observable<number> {
-    return this.http.get<BaseResponse<number>>(`${this.apiUrl}/count`)
-      .pipe(map(res => res.data));
-  }
-
-  changePassword(request: ChangePasswordRequest): Observable<BaseResponse<any>> {
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${localStorage.getItem('access_token') || ''}`
-    });
-    return this.http.post<BaseResponse<any>>(`${this.apiUrl}/change-password`, request, { headers });
+export class UserService extends ResourceService<
+  UserResponse,
+  AdminCreateUserRequest,
+  UpdateUserRequest
+> {
+  constructor(http: HttpClientService) {
+    super(http, '/users');
   }
 
   /**
-   * Upload avatar file for a user. Accepts a File object and posts as multipart/form-data.
+   * Get current authenticated user details
+   * @returns Observable of current user
+   */
+  getCurrentUser(): Observable<BaseResponse<UserDetailsResponse>> {
+    return this.http.get<UserDetailsResponse>(`${this.baseUrl}/current`);
+  }
+
+  /**
+   * Get user details by ID (returns UserDetailsResponse instead of UserResponse)
+   * @param id - User identifier
+   * @returns Observable of detailed user
+   */
+  getUserDetails(id: number): Observable<BaseResponse<UserDetailsResponse>> {
+    return this.getDetails(id) as Observable<BaseResponse<UserDetailsResponse>>;
+  }
+
+  /**
+   * Change user password
+   * @param request - Password change request
+   * @returns Observable of change result
+   */
+  changePassword(request: ChangePasswordRequest): Observable<BaseResponse<any>> {
+    return this.http.post<any>(`${this.baseUrl}/change-password`, request);
+  }
+
+  /**
+   * Upload user avatar
+   * @param id - User identifier
+   * @param file - Avatar image file
+   * @returns Observable of upload result
    */
   uploadAvatar(id: number, file: File): Observable<BaseResponse<any>> {
-    const form = new FormData();
-    form.append('file', file);
+    return this.uploadFile(id, file, 'avatar');
+  }
 
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${localStorage.getItem('access_token') || ''}`
-    });
-
-    return this.http.post<BaseResponse<any>>(`${this.apiUrl}/${id}/avatar`, form, { headers });
+  /**
+   * Export user report
+   * @param username - Optional username filter
+   * @returns Observable of Blob (PDF)
+   */
+  exportUserReport(username?: string): Observable<Blob> {
+    const params = username ? { username } : undefined;
+    return this.exportReport('/reports/users', params);
   }
 }

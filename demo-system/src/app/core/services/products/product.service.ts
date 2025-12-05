@@ -1,95 +1,84 @@
-import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { environment } from 'src/environments/environment';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+import { HttpParams } from '@angular/common/http';
+import { HttpClientService } from '../base/http-client.service';
+import { ResourceService } from '../base/resource.service';
 import { BaseResponse } from '../../models/response/base-response';
 import { PageResponse } from '../../models/response/page-response';
 import { ProductResponse } from '../../models/response/Product/ProductResponse';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { ProductRequest } from '../../models/request/Product/ProductRequest';
 
+/**
+ * Product service with CRUD operations and domain-specific methods
+ * Extends ResourceService to inherit common REST operations
+ */
 @Injectable({
   providedIn: 'root'
 })
-export class ProductService {
-
-  private apiUrl = `${environment.apiUrl}/products`;
-
-  constructor(private http: HttpClient) { }
-
-  getAllProducts(pageNumber: number, pageSize: number): Observable<BaseResponse<PageResponse<ProductResponse>>> {
-    const params = new HttpParams()
-      .set('pageNumber', String(pageNumber))
-      .set('pageSize', String(pageSize));
-    return this.http.get<BaseResponse<PageResponse<ProductResponse>>>(this.apiUrl, { params });
-  }
-
-  getProductDetails(id: number): Observable<BaseResponse<ProductResponse>> {
-    return this.http.get<BaseResponse<ProductResponse>>(`${this.apiUrl}/${id}`);
-  }
-
-  deleteProduct(id: number): Observable<BaseResponse<any>> {
-    return this.http.delete<BaseResponse<any>>(`${this.apiUrl}/${id}`);
-  }
-
-  countProducts(): Observable<number> {
-    return this.http.get<BaseResponse<number>>(`${this.apiUrl}/count`)
-      .pipe(map(res => res.data));
+export class ProductService extends ResourceService<
+  ProductResponse,
+  ProductRequest,
+  ProductRequest
+> {
+  constructor(http: HttpClientService) {
+    super(http, '/products');
   }
 
   /**
-   * Create product với imageUrl từ Upload API
+   * Search products by name
+   * @param name - Product name to search
+   * @returns Observable of matching products
    */
-  createProduct(request: ProductRequest): Observable<BaseResponse<any>> {
-    return this.http.post<BaseResponse<any>>(`${this.apiUrl}/create`, request);
-  }
-
-  updateProduct(id: number, request: ProductRequest): Observable<BaseResponse<any>> {
-    return this.http.patch<BaseResponse<any>>(`${this.apiUrl}/${id}`, request);
-  }
-
-  exportProductReport(name?: string): Observable<Blob> {
-    let params = new HttpParams();
-    if (name && name.trim()) {
-      params = params.set('name', name.trim());
-    }
-    
-    return this.http.get(`${environment.apiUrl}/reports/products`, {
-      params: params,
-      responseType: 'blob'
-    });
-  }
-
-  uploadImage(id: number, file: File): Observable<BaseResponse<any>> {
-    const form = new FormData();
-    form.append('file', file);
-
-    const headers = new HttpHeaders({
-      Authorization: `Bearer ${localStorage.getItem('access_token') || ''}`
-    });
-
-    return this.http.post<BaseResponse<any>>(`${this.apiUrl}/${id}/image`, form, { headers });
-  }
-
-  searchByName(name: String): Observable<BaseResponse<ProductResponse[]>> {
-    const params = new HttpParams().set('name', name.toString());
-    return this.http.post<BaseResponse<ProductResponse[]>>(`${this.apiUrl}/search`, null, { params });
+  searchByName(name: string): Observable<BaseResponse<ProductResponse[]>> {
+    const params = new HttpParams().set('name', name);
+    return this.http.post<ProductResponse[]>(`${this.baseUrl}/search`, null, params);
   }
 
   /**
    * Search products by category name with pagination
+   * @param categoryName - Category name
+   * @param page - Page number (default: 0)
+   * @param size - Page size (default: 12)
+   * @returns Observable of paginated products
    */
-  searchByCategory(categoryName: string, pageNumber: number = 0, pageSize: number = 12): Observable<BaseResponse<PageResponse<ProductResponse>>> {
-    const params = new HttpParams()
-      .set('name', categoryName)
-      .set('pageNumber', pageNumber.toString())
-      .set('pageSize', pageSize.toString());
-    return this.http.post<BaseResponse<PageResponse<ProductResponse>>>(`${this.apiUrl}/search-category`, null, { params });
+  searchByCategory(
+    categoryName: string,
+    page: number = 0,
+    size: number = 12
+  ): Observable<BaseResponse<PageResponse<ProductResponse>>> {
+    const params = this.toHttpParams({ name: categoryName, pageNumber: page, pageSize: size });
+    return this.http.post<PageResponse<ProductResponse>>(`${this.baseUrl}/search-category`, null, params);
   }
 
+  /**
+   * Count products by category ID
+   * @param categoryId - Category identifier
+   * @returns Observable of product count
+   */
   countByCategoryId(categoryId: number): Observable<number> {
-    const params = new HttpParams().set('categoryId', categoryId.toString());
-    return this.http.get<BaseResponse<number>>(`${this.apiUrl}/count-by-category`, { params })
+    const params = this.toHttpParams({ categoryId });
+    return this.http.get<number>(`${this.baseUrl}/count-by-category`, params)
       .pipe(map(res => res.data));
+  }
+
+  /**
+   * Upload product image
+   * @param id - Product identifier
+   * @param file - Image file
+   * @returns Observable of upload result
+   */
+  uploadProductImage(id: number, file: File): Observable<BaseResponse<any>> {
+    return this.uploadFile(id, file, 'image');
+  }
+
+  /**
+   * Export product report
+   * @param name - Optional product name filter
+   * @returns Observable of Blob (PDF)
+   */
+  exportProductReport(name?: string): Observable<Blob> {
+    const params = name ? { name } : undefined;
+    return this.exportReport('/reports/products', params);
   }
 }

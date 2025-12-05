@@ -1,18 +1,20 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { takeUntil } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
 import { OrderService } from 'src/app/core/services/orders/order.service';
 import { OrderResponse } from 'src/app/core/models/response/Order/OrderResponse';
 import { OrderStatus, OrderStatusLabels, OrderStatusColors } from 'src/app/utils/OrderStatus';
 import { PaymentMethodLabels } from 'src/app/utils/PaymentMethod';
 import { PaymentStatusLabels, PaymentStatusColors } from 'src/app/utils/PaymentStatus';
+import { DestroyableComponent } from 'src/app/shared/components/base/destroyable.component';
 
 @Component({
   selector: 'app-order-list',
   templateUrl: './order-list.component.html',
   styleUrls: ['./order-list.component.css']
 })
-export class OrderListComponent implements OnInit {
+export class OrderListComponent extends DestroyableComponent implements OnInit {
 
   orders: OrderResponse[] = [];
   totalPages = 0;
@@ -42,7 +44,9 @@ export class OrderListComponent implements OnInit {
     private orderService: OrderService,
     private toastr: ToastrService,
     private router: Router
-  ) { }
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
     this.loadMyOrders(this.currentPage);
@@ -50,22 +54,24 @@ export class OrderListComponent implements OnInit {
 
   loadMyOrders(page: number) {
     this.loading = true;
-    this.orderService.getMyOrders(this.selectedStatus, page, this.pageSize).subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.orders = response.data.content;
-          this.totalPages = response.data.totalPages;
-          this.totalElements = response.data.totalElements;
-          this.currentPage = response.data.pageNumber;
+    this.orderService.getMyOrders(this.selectedStatus, page, this.pageSize)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.orders = response.data.content;
+            this.totalPages = response.data.totalPages;
+            this.totalElements = response.data.totalElements;
+            this.currentPage = response.data.pageNumber;
+          }
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('Error loading orders', err);
+          this.toastr.error('Không thể tải danh sách đơn hàng!', 'Lỗi');
+          this.loading = false;
         }
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('Error loading orders', err);
-        this.toastr.error('Không thể tải danh sách đơn hàng!', 'Lỗi');
-        this.loading = false;
-      }
-    });
+      });
   }
 
   filterByStatus() {
@@ -138,20 +144,22 @@ export class OrderListComponent implements OnInit {
     if (!confirm(`Bạn có chắc muốn hủy đơn hàng ${order.orderNumber}?`)) return;
 
     this.loading = true;
-    this.orderService.cancelOrder(order.id).subscribe({
-      next: (res) => {
-        if (res.success) {
-          this.toastr.success('Hủy đơn hàng thành công!', 'Thành công');
-          this.loadMyOrders(this.currentPage);
+    this.orderService.cancelOrder(order.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          if (res.success) {
+            this.toastr.success('Hủy đơn hàng thành công!', 'Thành công');
+            this.loadMyOrders(this.currentPage);
+          }
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('Cancel order error:', err);
+          this.toastr.error(err.error?.message || 'Không thể hủy đơn hàng!', 'Lỗi');
+          this.loading = false;
         }
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('Cancel order error:', err);
-        this.toastr.error(err.error?.message || 'Không thể hủy đơn hàng!', 'Lỗi');
-        this.loading = false;
-      }
-    });
+      });
   }
 
   canCancelOrder(order: OrderResponse): boolean {

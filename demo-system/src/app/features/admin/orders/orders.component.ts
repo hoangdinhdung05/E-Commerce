@@ -5,15 +5,16 @@ import { OrderStatus } from '../../../utils/OrderStatus';
 import { UpdateOrderStatusRequest } from '../../../core/models/request/Order/UpdateOrderStatusRequest';
 import { ToastrService } from 'ngx-toastr';
 import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { environment } from 'src/environments/environment';
+import { DestroyableComponent } from '../../../shared/components/base/destroyable.component';
 
 @Component({
   selector: 'app-admin-orders',
   templateUrl: './orders.component.html',
   styleUrls: ['./orders.component.css']
 })
-export class AdminOrdersComponent implements OnInit {
+export class AdminOrdersComponent extends DestroyableComponent implements OnInit {
   orders: OrderResponse[] = [];
   isLoading = false;
 
@@ -55,7 +56,9 @@ export class AdminOrdersComponent implements OnInit {
   constructor(
     private orderService: OrderService,
     private toastr: ToastrService
-  ) {}
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
     this.loadOrders();
@@ -65,7 +68,8 @@ export class AdminOrdersComponent implements OnInit {
   setupSearch(): void {
     this.searchSubject.pipe(
       debounceTime(400),
-      distinctUntilChanged()
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
     ).subscribe(searchValue => {
       this.searchTerm = searchValue;
       this.currentPage = 0;
@@ -75,21 +79,23 @@ export class AdminOrdersComponent implements OnInit {
 
   loadOrders(): void {
     this.isLoading = true;
-    this.orderService.getAllOrders(this.selectedStatus, this.currentPage, this.pageSize).subscribe({
-      next: (response) => {
-        if (response.success && response.data) {
-          this.orders = response.data.content;
-          this.totalPages = response.data.totalPages;
-          this.totalElements = response.data.totalElements;
+    this.orderService.getAllOrders(this.selectedStatus, this.currentPage, this.pageSize)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success && response.data) {
+            this.orders = response.data.content;
+            this.totalPages = response.data.totalPages;
+            this.totalElements = response.data.totalElements;
+          }
+          this.isLoading = false;
+        },
+        error: (error) => {
+          console.error('Error loading orders:', error);
+          this.toastr.error('Không thể tải danh sách đơn hàng', 'Lỗi');
+          this.isLoading = false;
         }
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading orders:', error);
-        this.toastr.error('Không thể tải danh sách đơn hàng', 'Lỗi');
-        this.isLoading = false;
-      }
-    });
+      });
   }
 
   onSearchChange(value: string): void {
@@ -130,19 +136,21 @@ export class AdminOrdersComponent implements OnInit {
       status: this.newStatus
     };
 
-    this.orderService.updateOrderStatus(this.selectedOrder.id, request).subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.toastr.success('Cập nhật trạng thái đơn hàng thành công', 'Thành công');
-          this.closeUpdateStatusModal();
-          this.loadOrders();
+    this.orderService.updateOrderStatus(this.selectedOrder.id, request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.toastr.success('Cập nhật trạng thái đơn hàng thành công', 'Thành công');
+            this.closeUpdateStatusModal();
+            this.loadOrders();
+          }
+        },
+        error: (error) => {
+          console.error('Error updating order status:', error);
+          this.toastr.error('Không thể cập nhật trạng thái đơn hàng', 'Lỗi');
         }
-      },
-      error: (error) => {
-        console.error('Error updating order status:', error);
-        this.toastr.error('Không thể cập nhật trạng thái đơn hàng', 'Lỗi');
-      }
-    });
+      });
   }
 
   getStatusBadgeClass(status: OrderStatus): string {
@@ -231,17 +239,19 @@ export class AdminOrdersComponent implements OnInit {
     // Export PDF không còn ở FE nữa, chuyển sang gọi API backend
     this.toastr.info('Đang tạo PDF đơn hàng...', 'Thông báo');
     
-    this.orderService.exportOrdersAsync(order.orderNumber).subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.toastr.success('Yêu cầu xuất PDF đã được gửi. Bạn sẽ nhận được email khi file sẵn sàng.', 'Thành công');
+    this.orderService.exportOrdersAsync(order.orderNumber)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.toastr.success('Yêu cầu xuất PDF đã được gửi. Bạn sẽ nhận được email khi file sẵn sàng.', 'Thành công');
+          }
+        },
+        error: (error) => {
+          console.error('Error requesting PDF export:', error);
+          this.toastr.error('Không thể gửi yêu cầu xuất PDF', 'Lỗi');
         }
-      },
-      error: (error) => {
-        console.error('Error requesting PDF export:', error);
-        this.toastr.error('Không thể gửi yêu cầu xuất PDF', 'Lỗi');
-      }
-    });
+      });
   }
 
   exportOrdersReport(): void {
@@ -250,16 +260,18 @@ export class AdminOrdersComponent implements OnInit {
     const customerOrder = this.searchTerm.trim() || undefined;
     const status = this.selectedStatus;
     
-    this.orderService.exportOrdersAsync(customerOrder, status).subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.toastr.success('Yêu cầu xuất báo cáo PDF đã được gửi. Bạn sẽ nhận được khi file sẵn sàng.', 'Thành công');
+    this.orderService.exportOrdersAsync(customerOrder, status)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.toastr.success('Yêu cầu xuất báo cáo PDF đã được gửi. Bạn sẽ nhận được khi file sẵn sàng.', 'Thành công');
+          }
+        },
+        error: (error) => {
+          console.error('Error requesting report export:', error);
+          this.toastr.error('Không thể gửi yêu cầu xuất báo cáo', 'Lỗi');
         }
-      },
-      error: (error) => {
-        console.error('Error requesting report export:', error);
-        this.toastr.error('Không thể gửi yêu cầu xuất báo cáo', 'Lỗi');
-      }
-    });
+      });
   }
 }

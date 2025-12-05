@@ -1,17 +1,19 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { takeUntil, switchMap } from 'rxjs/operators';
 import { ProductService } from '../../../core/services/products/product.service';
 import { ProductResponse } from '../../../core/models/response/Product/ProductResponse';
 import { CartService } from '../../../core/services/cart/cart.service';
 import { environment } from '../../../../environments/environment';
 import { ToastrService } from 'ngx-toastr';
+import { DestroyableComponent } from '../../../shared/components/base/destroyable.component';
 
 @Component({
   selector: 'app-product-detail',
   templateUrl: './product-detail.component.html',
   styleUrls: ['./product-detail.component.css']
 })
-export class ProductDetailComponent implements OnInit {
+export class ProductDetailComponent extends DestroyableComponent implements OnInit {
   product: ProductResponse | null = null;
   isLoading = false;
   quantity = 1;
@@ -23,20 +25,19 @@ export class ProductDetailComponent implements OnInit {
     private productService: ProductService,
     private cartService: CartService,
     private toastr: ToastrService
-  ) { }
-
-  ngOnInit(): void {
-    this.route.params.subscribe(params => {
-      const id = +params['id'];
-      if (id) {
-        this.loadProductDetails(id);
-      }
-    });
+  ) {
+    super();
   }
 
-  loadProductDetails(id: number): void {
-    this.isLoading = true;
-    this.productService.getProductDetails(id).subscribe({
+  ngOnInit(): void {
+    this.route.params.pipe(
+      switchMap(params => {
+        const id = +params['id'];
+        this.isLoading = true;
+        return this.productService.getById(id);
+      }),
+      takeUntil(this.destroy$)
+    ).subscribe({
       next: (response) => {
         if (response.success && response.data) {
           this.product = response.data;
@@ -80,7 +81,9 @@ export class ProductDetailComponent implements OnInit {
     this.cartService.addToCart({
       productId: this.product.id,
       quantity: this.quantity
-    }).subscribe({
+    })
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
       next: (response) => {
         this.toastr.success(`Đã thêm ${this.quantity} sản phẩm vào giỏ hàng!`, 'Thành công');
       },
@@ -97,7 +100,9 @@ export class ProductDetailComponent implements OnInit {
     this.cartService.addToCart({
       productId: this.product.id,
       quantity: this.quantity
-    }).subscribe({
+    })
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
       next: (response) => {
         this.router.navigate(['/checkout']);
       },

@@ -1,16 +1,18 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { takeUntil } from 'rxjs/operators';
 import { AuthService } from 'src/app/core/auth.service';
 import { RegisterRequest } from 'src/app/core/models/request/register-request';
 import { ToastService } from 'src/app/core/services/toast.service';
+import { DestroyableComponent } from 'src/app/shared/components/base/destroyable.component';
 
 @Component({
   selector: 'app-register',
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.css']
 })
-export class RegisterComponent {
+export class RegisterComponent extends DestroyableComponent {
 
   registerForm: FormGroup;
 
@@ -20,6 +22,7 @@ export class RegisterComponent {
     private authService: AuthService,
     private toast: ToastService
   ) {
+    super();
     this.registerForm = this.fb.group({
       username: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
@@ -36,7 +39,9 @@ export class RegisterComponent {
 
     const request: RegisterRequest = this.registerForm.value;
 
-    this.authService.register(request).subscribe({
+    this.authService.register(request)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
       next: (res) => {
         if (res.success) {
           this.toast.success('Đăng ký thành công! Vui lòng kiểm tra email để nhận mã OTP.');

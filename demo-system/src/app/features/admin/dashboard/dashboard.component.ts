@@ -7,13 +7,15 @@ import { UserService } from 'src/app/core/services/users/user.service';
 import { OrderService } from 'src/app/core/services/orders/order.service';
 import { PaymentService } from 'src/app/core/services/payments/payment.service';
 import { OrderStatus } from 'src/app/utils/OrderStatus';
+import { takeUntil } from 'rxjs/operators';
+import { DestroyableComponent } from '../../../shared/components/base/destroyable.component';
 
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
-export class DashboardComponent implements OnInit, AfterViewInit {
+export class DashboardComponent extends DestroyableComponent implements OnInit, AfterViewInit {
   totalUsers = 0;
   totalProducts = 0;
   totalCategories = 0;
@@ -37,7 +39,9 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     private categoryService: CategoryService,
     private orderService: OrderService,
     private paymentService: PaymentService
-  ) {}
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
     this.countUsers();
@@ -241,86 +245,100 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   }
 
   countUsers() {
-    this.userService.countUser().subscribe({
-      next: (count) => {
-        this.totalUsers = count;
-        this.updateCharts();
-      },
-      error: (err) => console.error('Error counting users:', err)
-    });
+    this.userService.count()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (count: number) => {
+          this.totalUsers = count;
+          this.updateCharts();
+        },
+        error: (err: any) => console.error('Error counting users:', err)
+      });
   }
 
   countProducts() {
-    this.productService.countProducts().subscribe({
-      next: (count) => {
-        this.totalProducts = count;
-        this.updateCharts();
-      },
-      error: (err) => console.error('Error counting products:', err)
-    });
+    this.productService.count()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (count: number) => {
+          this.totalProducts = count;
+          this.updateCharts();
+        },
+        error: (err: any) => console.error('Error counting products:', err)
+      });
   }
 
   countCategories() {
-    this.categoryService.countCategories().subscribe({
-      next: (count) => {
-        this.totalCategories = count;
-        this.updateCharts();
-      },
-      error: (err) => console.error('Error counting categories:', err)
-    });
+    this.categoryService.count()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (count: number) => {
+          this.totalCategories = count;
+          this.updateCharts();
+        },
+        error: (err: any) => console.error('Error counting categories:', err)
+      });
   }
 
   countOrders() {
-    this.orderService.countAllOrders().subscribe({
-      next: (response: any) => {
-        // Backend trả về BaseResponse, cần extract data
-        this.totalOrders = typeof response === 'object' && response.data !== undefined ? response.data : response;
-        this.updateCharts();
-      },
-      error: (err) => {
-        console.error('Error counting orders:', err);
-        this.totalOrders = 0; // Fallback if API not ready
-      }
-    });
+    this.orderService.countAllOrders()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: any) => {
+          // Backend trả về BaseResponse, cần extract data
+          this.totalOrders = typeof response === 'object' && response.data !== undefined ? response.data : response;
+          this.updateCharts();
+        },
+        error: (err) => {
+          console.error('Error counting orders:', err);
+          this.totalOrders = 0; // Fallback if API not ready
+        }
+      });
   }
 
   countPendingOrders() {
-    this.orderService.countOrdersByStatus(OrderStatus.PENDING).subscribe({
-      next: (response: any) => {
-        this.pendingOrders = typeof response === 'object' && response.data !== undefined ? response.data : response;
-        this.updateCharts();
-      },
-      error: (err) => {
-        console.error('Error counting pending orders:', err);
-        this.pendingOrders = 0;
-      }
-    });
+    this.orderService.countOrdersByStatus(OrderStatus.PENDING)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: any) => {
+          this.pendingOrders = typeof response === 'object' && response.data !== undefined ? response.data : response;
+          this.updateCharts();
+        },
+        error: (err) => {
+          console.error('Error counting pending orders:', err);
+          this.pendingOrders = 0;
+        }
+      });
   }
 
   countCompletedOrders() {
-    this.orderService.countOrdersByStatus(OrderStatus.DELIVERED).subscribe({
-      next: (response: any) => {
-        this.completedOrders = typeof response === 'object' && response.data !== undefined ? response.data : response;
-        this.updateCharts();
-      },
-      error: (err) => {
-        console.error('Error counting completed orders:', err);
-        this.completedOrders = 0;
-      }
-    });
+    this.orderService.countOrdersByStatus(OrderStatus.DELIVERED)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: any) => {
+          this.completedOrders = typeof response === 'object' && response.data !== undefined ? response.data : response;
+          this.updateCharts();
+        },
+        error: (err) => {
+          console.error('Error counting completed orders:', err);
+          this.completedOrders = 0;
+        }
+      });
   }
 
   getTotalRevenue() {
-    this.paymentService.getTotalRevenue().subscribe({
-      next: (response: any) => {
-        this.totalRevenue = typeof response === 'object' && response.data !== undefined ? response.data : response;
-        this.updateCharts();
-      },
-      error: (err) => {
-        console.error('Error getting total revenue:', err);
-        this.totalRevenue = 0;
-      }
-    });
+    this.paymentService.getTotalRevenue()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: any) => {
+          this.totalRevenue = typeof response === 'object' && response.data !== undefined ? response.data : response;
+          this.updateCharts();
+        },
+        error: (err) => {
+          console.error('Error getting total revenue:', err);
+          this.totalRevenue = 0;
+        }
+      });
   }
 
   navigateToUsers() {

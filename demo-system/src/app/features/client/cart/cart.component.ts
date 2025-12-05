@@ -1,17 +1,19 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { takeUntil } from 'rxjs/operators';
 import { CartService } from 'src/app/core/services/cart/cart.service';
 import { CartResponse } from 'src/app/core/models/response/Cart/CartResponse';
 import { CartItemResponse } from 'src/app/core/models/response/Cart/CartItemResponse';
 import { ToastService } from 'src/app/core/services/toast.service';
 import { environment } from 'src/environments/environment';
+import { DestroyableComponent } from 'src/app/shared/components/base/destroyable.component';
 
 @Component({
   selector: 'app-cart',
   templateUrl: './cart.component.html',
   styleUrls: ['./cart.component.css']
 })
-export class CartComponent implements OnInit {
+export class CartComponent extends DestroyableComponent implements OnInit {
   cart: CartResponse | null = null;
   isLoading = false;
   updatingItems: Set<number> = new Set();
@@ -20,20 +22,24 @@ export class CartComponent implements OnInit {
     private cartService: CartService,
     private router: Router,
     private toastService: ToastService
-  ) {}
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
     // Subscribe to cart observable instead of loading manually
-    this.cartService.cart$.subscribe({
-      next: (cart) => {
-        this.cart = cart;
-        this.isLoading = false;
-      },
-      error: (err) => {
-        console.error('Error loading cart:', err);
-        this.isLoading = false;
-      }
-    });
+    this.cartService.cart$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (cart) => {
+          this.cart = cart;
+          this.isLoading = false;
+        },
+        error: (err) => {
+          console.error('Error loading cart:', err);
+          this.isLoading = false;
+        }
+      });
   }
 
   getProductImageUrl(item: CartItemResponse): string {
@@ -51,19 +57,21 @@ export class CartComponent implements OnInit {
     }
 
     this.updatingItems.add(item.id);
-    this.cartService.updateCartItem(item.id, { quantity: newQuantity }).subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.toastService.success('Đã cập nhật số lượng');
+    this.cartService.updateCartItem(item.id, { quantity: newQuantity })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.toastService.success('Đã cập nhật số lượng');
+          }
+          this.updatingItems.delete(item.id);
+        },
+        error: (err) => {
+          console.error('Error updating cart item:', err);
+          this.toastService.error('Không thể cập nhật số lượng');
+          this.updatingItems.delete(item.id);
         }
-        this.updatingItems.delete(item.id);
-      },
-      error: (err) => {
-        console.error('Error updating cart item:', err);
-        this.toastService.error('Không thể cập nhật số lượng');
-        this.updatingItems.delete(item.id);
-      }
-    });
+      });
   }
 
   increaseQuantity(item: CartItemResponse): void {
@@ -80,19 +88,21 @@ export class CartComponent implements OnInit {
     }
 
     this.updatingItems.add(item.id);
-    this.cartService.removeCartItem(item.id).subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.toastService.success('Đã xóa sản phẩm khỏi giỏ hàng');
+    this.cartService.removeCartItem(item.id)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.toastService.success('Đã xóa sản phẩm khỏi giỏ hàng');
+          }
+          this.updatingItems.delete(item.id);
+        },
+        error: (err) => {
+          console.error('Error removing cart item:', err);
+          this.toastService.error('Không thể xóa sản phẩm');
+          this.updatingItems.delete(item.id);
         }
-        this.updatingItems.delete(item.id);
-      },
-      error: (err) => {
-        console.error('Error removing cart item:', err);
-        this.toastService.error('Không thể xóa sản phẩm');
-        this.updatingItems.delete(item.id);
-      }
-    });
+      });
   }
 
   clearCart(): void {
@@ -103,18 +113,20 @@ export class CartComponent implements OnInit {
     }
 
     this.isLoading = true;
-    this.cartService.clearCart().subscribe({
-      next: () => {
-        this.cart = null;
-        this.toastService.success('Đã xóa toàn bộ giỏ hàng');
-        this.isLoading = false;
-      },
-      error: (err) => {
-        console.error('Error clearing cart:', err);
-        this.toastService.error('Không thể xóa giỏ hàng');
-        this.isLoading = false;
-      }
-    });
+    this.cartService.clearCart()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.cart = null;
+          this.toastService.success('Đã xóa toàn bộ giỏ hàng');
+          this.isLoading = false;
+        },
+        error: (err) => {
+          console.error('Error clearing cart:', err);
+          this.toastService.error('Không thể xóa giỏ hàng');
+          this.isLoading = false;
+        }
+      });
   }
 
   proceedToCheckout(): void {

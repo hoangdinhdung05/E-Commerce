@@ -1,8 +1,10 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
+import { takeUntil } from 'rxjs/operators';
 import { CategoryRequest } from 'src/app/core/models/request/Category/CategoryRequest';
 import { CategoryService } from 'src/app/core/services/categories/category.service';
+import { DestroyableComponent } from 'src/app/shared/components/base/destroyable.component';
 
 declare var bootstrap: any;
 
@@ -11,7 +13,7 @@ declare var bootstrap: any;
   templateUrl: './category.component.html',
   styleUrls: ['./category.component.css']
 })
-export class CategoryComponent implements OnInit {
+export class CategoryComponent extends DestroyableComponent implements OnInit {
 
   categories: any[] = [];
   filteredCategories: any[] = [];
@@ -44,7 +46,9 @@ export class CategoryComponent implements OnInit {
 
   constructor(private categoryService: CategoryService, 
     private toastr: ToastrService, 
-    private fb: FormBuilder) { }
+    private fb: FormBuilder) { 
+    super();
+  }
 
   ngOnInit(): void {
     this.createCategoryForm = this.fb.group({
@@ -64,7 +68,7 @@ export class CategoryComponent implements OnInit {
 
   loadCategories(page: number) {
     this.loading = true;
-    this.categoryService.getAllCategories(page, this.pageSize).subscribe({
+    this.categoryService.getAll(page, this.pageSize).pipe(takeUntil(this.destroy$)).subscribe({
       next: (response) => {
         if (response.success) {
           this.categories = response.data.content;
@@ -155,7 +159,7 @@ export class CategoryComponent implements OnInit {
     const request: CategoryRequest = this.createCategoryForm.value;
     this.backendErrors = {}; // reset lỗi cũ
 
-    this.categoryService.adminCreateCategory(request).subscribe({
+    this.categoryService.adminCreateCategory(request).pipe(takeUntil(this.destroy$)).subscribe({
       next: res => {
         this.toastr.success('Tạo danh mục thành công!', 'Thành công');
         this.closeCreateCategoryModal();
@@ -198,7 +202,7 @@ export class CategoryComponent implements OnInit {
 
   exportCategoryReport() {
     this.loading = true;
-    this.categoryService.exportCategoryReport().subscribe({
+    this.categoryService.exportCategoryReport().pipe(takeUntil(this.destroy$)).subscribe({
       next: (blob) => {
         const file = new Blob([blob], { type: 'application/pdf' });
         const fileURL = URL.createObjectURL(file);
@@ -233,13 +237,13 @@ export class CategoryComponent implements OnInit {
     if (this.editCategoryForm.invalid || !this.selectedCategory) return;
 
     const request = this.editCategoryForm.value;
-    this.categoryService.updateCategory(this.selectedCategory.id, request).subscribe({
-      next: res => {
+    this.categoryService.update(this.selectedCategory.id, request).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res: any) => {
         this.toastr.success('Cập nhật danh mục thành công!', 'Thành công');
         this.closeEditModal();
         this.loadCategories(this.currentPage);
       },
-      error: err => {
+      error: (err: any) => {
         console.error('Update error:', err);
         this.toastr.error(err.error?.message || 'Có lỗi xảy ra khi cập nhật!', 'Lỗi');
       }
@@ -260,8 +264,8 @@ export class CategoryComponent implements OnInit {
   confirmDeleteCategory() {
     if (!this.categoryToDelete) return;
 
-    this.categoryService.deleteCategory(this.categoryToDelete.id).subscribe({
-      next: (res) => {
+    this.categoryService.delete(this.categoryToDelete.id).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res: any) => {
         if (res.success) {
           this.toastr.success('Xóa danh mục thành công!', 'Thành công');
           this.closeDeleteModal();
@@ -270,7 +274,7 @@ export class CategoryComponent implements OnInit {
           this.toastr.warning('Không thể xóa danh mục này!', 'Cảnh báo');
         }
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Error deleting category:', err);
         if (err.error?.message) {
           this.toastr.error(err.error.message, 'Lỗi');

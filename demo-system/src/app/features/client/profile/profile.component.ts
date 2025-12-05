@@ -1,18 +1,20 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { takeUntil } from 'rxjs/operators';
 import { UserService } from '../../../core/services/users/user.service';
 import { AuthService } from '../../../core/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { UserDetailsResponse } from '../../../core/models/response/User/UserDetailsRespomse';
 import { UpdateUserRequest } from '../../../core/models/request/Users/UpdateUserRequest';
 import { environment } from '../../../../environments/environment';
+import { DestroyableComponent } from '../../../shared/components/base/destroyable.component';
 
 @Component({
   selector: 'app-profile',
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css']
 })
-export class ProfileComponent implements OnInit {
+export class ProfileComponent extends DestroyableComponent implements OnInit {
   user: UserDetailsResponse | null = null;
   isLoading = false;
   avatarUrl: string | null = null;
@@ -33,6 +35,7 @@ export class ProfileComponent implements OnInit {
     private toastService: ToastService,
     private fb: FormBuilder
   ) {
+    super();
     this.initEditForm();
   }
 
@@ -49,7 +52,9 @@ export class ProfileComponent implements OnInit {
 
   loadUserProfile(): void {
     this.isLoading = true;
-    this.userService.getCurrentUser().subscribe({
+    this.userService.getCurrentUser()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
       next: (response) => {
         if (response.success && response.data) {
           this.user = response.data;
@@ -91,8 +96,10 @@ export class ProfileComponent implements OnInit {
         lastName: this.editProfileForm.value.lastName
       };
       
-      this.userService.updateUser(this.user.id, request).subscribe({
-        next: (response) => {
+      this.userService.update(this.user.id, request)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+        next: (response: any) => {
           if (response.success) {
             this.toastService.success('Cập nhật thông tin thành công');
             this.closeEditModal();
@@ -102,7 +109,7 @@ export class ProfileComponent implements OnInit {
           }
           this.isUpdating = false;
         },
-        error: (error) => {
+        error: (error: any) => {
           console.error('Error updating profile:', error);
           this.toastService.error('Có lỗi xảy ra khi cập nhật thông tin');
           this.isUpdating = false;
@@ -149,7 +156,9 @@ export class ProfileComponent implements OnInit {
     if (this.selectedAvatarFile && this.user) {
       this.isUploadingAvatar = true;
       
-      this.userService.uploadAvatar(this.user.id, this.selectedAvatarFile).subscribe({
+      this.userService.uploadAvatar(this.user.id, this.selectedAvatarFile)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
         next: (response) => {
           if (response.success) {
             this.toastService.success('Cập nhật ảnh đại diện thành công');

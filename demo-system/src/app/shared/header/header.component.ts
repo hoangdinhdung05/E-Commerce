@@ -131,7 +131,7 @@ export class HeaderComponent implements OnInit {
       firstName: this.user.firstName,
       lastName: this.user.lastName
     };
-    this.userService.updateUser(this.user.id, request).subscribe({
+    this.userService.update(this.user.id, request).subscribe({
       next: () => this.toastr.success('Cập nhật thành công'),
       error: () => this.toastr.error('Cập nhật thất bại')
     });
