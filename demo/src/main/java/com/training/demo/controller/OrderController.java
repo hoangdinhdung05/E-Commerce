@@ -27,7 +27,7 @@ public class OrderController {
     private final OrderService orderService;
 
     /**
-     * Tạo đơn hàng mới (trực tiếp không qua cart)
+     * Create new order (direct, not from cart)
      */
     @PostMapping
     public ResponseEntity<?> createOrder(@Valid @RequestBody CreateOrderRequest request) {
@@ -40,7 +40,7 @@ public class OrderController {
     }
 
     /**
-     * Checkout từ giỏ hàng
+     * Checkout from shopping cart
      */
     @PostMapping("/checkout")
     public ResponseEntity<?> checkoutCart(@Valid @RequestBody CheckoutCartRequest request) {
@@ -53,7 +53,7 @@ public class OrderController {
     }
 
     /**
-     * Lấy danh sách đơn hàng của user hiện tại
+     * Get current user's order list
      */
     @GetMapping("/my-orders")
     public ResponseEntity<?> getMyOrders(
@@ -68,7 +68,7 @@ public class OrderController {
     }
 
     /**
-     * Lấy chi tiết đơn hàng
+     * Get order details
      */
     @GetMapping("/{orderId}")
     public ResponseEntity<?> getOrderById(@PathVariable Long orderId) {
@@ -81,7 +81,7 @@ public class OrderController {
     }
 
     /**
-     * Lấy đơn hàng theo order number
+     * Get order by order number
      */
     @GetMapping("/number/{orderNumber}")
     public ResponseEntity<?> getOrderByNumber(@PathVariable String orderNumber) {
@@ -93,7 +93,7 @@ public class OrderController {
     }
 
     /**
-     * Hủy đơn hàng
+     * Cancel order
      */
     @PatchMapping("/{orderId}/cancel")
     public ResponseEntity<?> cancelOrder(@PathVariable Long orderId) {
@@ -106,7 +106,7 @@ public class OrderController {
     }
 
     /**
-     * Đếm số đơn hàng của user
+     * Count user's orders
      */
     @GetMapping("/count")
     public ResponseEntity<?> countMyOrders() {
@@ -121,7 +121,7 @@ public class OrderController {
     // ========== ADMIN ENDPOINTS ==========
 
     /**
-     * Lấy tất cả đơn hàng (ADMIN)
+     * Get all orders (ADMIN)
      */
     @GetMapping("/admin/all")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
@@ -136,7 +136,7 @@ public class OrderController {
     }
 
     /**
-     * Cập nhật trạng thái đơn hàng (ADMIN)
+     * Update order status (ADMIN)
      */
     @PatchMapping("/admin/{orderId}/status")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
@@ -151,7 +151,7 @@ public class OrderController {
     }
 
     /**
-     * Đếm tổng số đơn hàng (ADMIN)
+     * Count total orders (ADMIN)
      */
     @GetMapping("/admin/count")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
@@ -164,7 +164,7 @@ public class OrderController {
     }
 
     /**
-     * Đếm đơn hàng theo trạng thái (ADMIN)
+     * Count orders by status (ADMIN)
      */
     @GetMapping("/admin/count/status/{status}")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")

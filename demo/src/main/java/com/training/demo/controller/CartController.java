@@ -21,7 +21,7 @@ public class CartController {
     private final CartService cartService;
 
     /**
-     * Lấy giỏ hàng của user hiện tại
+     * Get current user's shopping cart
      */
     @GetMapping
     public ResponseEntity<?> getCart() {
@@ -34,7 +34,7 @@ public class CartController {
     }
 
     /**
-     * Thêm sản phẩm vào giỏ hàng
+     * Add product to shopping cart
      */
     @PostMapping("/add")
     public ResponseEntity<?> addToCart(@Valid @RequestBody AddToCartRequest request) {
@@ -49,7 +49,7 @@ public class CartController {
     }
 
     /**
-     * Cập nhật số lượng item trong giỏ
+     * Update cart item quantity
      */
     @PutMapping("/items/{cartItemId}")
     public ResponseEntity<?> updateCartItem(
@@ -64,7 +64,7 @@ public class CartController {
     }
 
     /**
-     * Xóa item khỏi giỏ hàng
+     * Remove item from shopping cart
      */
     @DeleteMapping("/items/{cartItemId}")
     public ResponseEntity<?> removeCartItem(@PathVariable Long cartItemId) {
@@ -77,7 +77,7 @@ public class CartController {
     }
 
     /**
-     * Xóa toàn bộ giỏ hàng
+     * Clear entire shopping cart
      */
     @DeleteMapping("/clear")
     public ResponseEntity<?> clearCart() {
@@ -92,7 +92,7 @@ public class CartController {
     }
 
     /**
-     * Đếm số lượng items trong giỏ
+     * Get total number of items in cart
      */
     @GetMapping("/count")
     public ResponseEntity<?> getCartItemCount() {

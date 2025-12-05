@@ -25,7 +25,7 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     /**
-     * Lấy tất cả payments (ADMIN)
+     * Get all payments (ADMIN)
      */
     @GetMapping("/admin/all")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
@@ -47,7 +47,7 @@ public class PaymentController {
     }
 
     /**
-     * Tạo payment cho order
+     * Create payment for order
      */
     @PostMapping
     public ResponseEntity<?> createPayment(@Valid @RequestBody CreatePaymentRequest request) {
@@ -60,7 +60,7 @@ public class PaymentController {
     }
 
     /**
-     * Xác nhận thanh toán (ADMIN)
+     * Confirm payment (ADMIN)
      */
     @PatchMapping("/{paymentId}/confirm")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
@@ -75,7 +75,7 @@ public class PaymentController {
     }
 
     /**
-     * Lấy chi tiết payment
+     * Get payment details
      */
     @GetMapping("/{paymentId}")
     public ResponseEntity<?> getPaymentById(@PathVariable Long paymentId) {

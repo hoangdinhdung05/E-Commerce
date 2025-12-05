@@ -1,7 +1,5 @@
 package com.training.demo.controller;
 
-import com.training.demo.application.usecase.user.ChangePasswordUseCase;
-import com.training.demo.application.usecase.user.GetUserUseCase;
 import com.training.demo.dto.request.User.AdminCreateUserRequest;
 import com.training.demo.dto.request.User.ChangePasswordRequest;
 import com.training.demo.dto.request.User.UpdateUserRequest;
@@ -32,26 +30,22 @@ import java.util.stream.Collectors;
 public class UserController {
 
     private final UserService userService;
-    
-    // Use Cases
-    private final GetUserUseCase getUserUseCase;
-    private final ChangePasswordUseCase changePasswordUseCase;
 
     /**
-     * Api get user info by userId
-     * @param id userId cần get
-     * @return Trả về thông tin cơ bản user
+     * Get user information by ID
+     * @param id user ID
+     * @return basic user information
      */
     @GetMapping("/{id}")
     public ResponseEntity<?> getUser(@PathVariable Long id) {
         log.info("[UserController] Getting user by id: {}", id);
-        return ResponseEntity.ok(BaseResponse.success(getUserUseCase.execute(id)));
+        return ResponseEntity.ok(BaseResponse.success(userService.getUser(id)));
     }
 
     /**
-     * Api get user info by userId
-     * @param id userId cần get
-     * @return Trả về thông tin cơ bản user
+     * Get detailed user information by ID
+     * @param id user ID
+     * @return detailed user information
      */
     @GetMapping("/details/{id}")
     public ResponseEntity<?> getUserDetails(@PathVariable Long id) {
@@ -60,10 +54,10 @@ public class UserController {
     }
 
     /**
-     * Lấy list user có phân trang
-     * @param pageNumber Trang hiện tại
-     * @param pageSize Kích thước trang
-     * @return Trả về danh sách user
+     * Get paginated list of users
+     * @param pageNumber current page number
+     * @param pageSize page size
+     * @return paginated user list
      */
     @GetMapping
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
@@ -75,20 +69,19 @@ public class UserController {
     }
 
     /**
-     * User thay đổi mật khẩu của mình
-     * @param request Thông tin mật khẩu cũ và mới
+     * Change user password
+     * @param request old and new password information
      */
     @PostMapping("/change-password")
     public ResponseEntity<?> changePassword(@RequestBody @Valid ChangePasswordRequest request) {
         log.info("[UserController] Changing password for current user");
-        Long userId = com.training.demo.security.SecurityUtils.getCurrentUserDetails().getUser().getId();
-        changePasswordUseCase.execute(userId, request);
+        userService.changePassword(request);
         return ResponseEntity.ok(BaseResponse.success("Password changed successfully"));
     }
 
     /**
-     * Admin xóa tài khoản user
-     * @param id userId cần xóa
+     * Admin deletes user account
+     * @param id user ID to delete
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
@@ -99,8 +92,8 @@ public class UserController {
     }
 
     /**
-     * Admin tạo ra account mới
-     * @param request thông tin cơ bản account
+     * Admin creates new user account
+     * @param request basic account information
      */
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     @PostMapping
@@ -111,8 +104,8 @@ public class UserController {
     }
 
     /**
-     * Xem thông tin cơ bản của user hiện tại
-     * @return Các thông tin cơ bản
+     * Get current authenticated user information
+     * @return current user basic information
      */
     @GetMapping("/current")
     public ResponseEntity<?> getCurrentUser() {
@@ -121,11 +114,11 @@ public class UserController {
     }
 
     /**
-     * Admin tìm kiếm user với nhiều bộ lọc khác nhau
+     * Admin searches users with multiple filters
      *
-     * @param filters  các bộ lọc
-     * @param pageable thông tin phân trang
-     * @return danh sách user
+     * @param filters search filters
+     * @param pageable pagination information
+     * @return filtered user list
      */
     @GetMapping("/filter")
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
@@ -143,9 +136,9 @@ public class UserController {
     }
 
     /**
-     * User cập nhật thông tin cá nhân của mình
-     * @param id userId cần cập nhật
-     * @param request thông tin mới
+     * User updates their personal information
+     * @param id user ID to update
+     * @param request new information
      */
     @PatchMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable Long id, @RequestBody UpdateUserRequest request) {
@@ -155,8 +148,8 @@ public class UserController {
     }
 
     /**
-     * Số lượng user
-     * @return Total
+     * Get total number of users
+     * @return total count
      */
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     @GetMapping("/count")
@@ -166,11 +159,11 @@ public class UserController {
     }
 
     /**
-     * Upload avatar
-     * @param id userid
-     * @param file ảnh
-     * @return success
-     * @throws IOException error
+     * Upload user avatar
+     * @param id user ID
+     * @param file avatar image file
+     * @return success response
+     * @throws IOException if upload fails
      */
     @PostMapping("/{id}/avatar")
     public ResponseEntity<?> uploadAvatar(@PathVariable Long id,

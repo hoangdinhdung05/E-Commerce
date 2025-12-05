@@ -23,9 +23,9 @@ public class AuthController {
     private final AuthService authService;
 
     /**
-     * Sử lí authenticate user
-     * @param request Username/Password
-     * @return AccessToken/RefreshToken
+     * Authenticate user
+     * @param request username and password
+     * @return access token and refresh token
      */
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody @Valid LoginRequest request) {
@@ -35,9 +35,9 @@ public class AuthController {
     }
 
     /**
-     * Đăng kí account
-     * @param request Info user
-     * @return Success
+     * Register new user account
+     * @param request user information
+     * @return success response
      */
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody @Valid RegisterRequest request) {
@@ -47,9 +47,9 @@ public class AuthController {
     }
 
     /**
-     * Active account sau khi register
-     * @param request email và otp
-     * @return Success
+     * Activate account after registration
+     * @param request email and OTP code
+     * @return success response
      */
     @PostMapping("/active")
     public ResponseEntity<?> active(@RequestBody @Valid EmailOtpRequest request) {
@@ -59,9 +59,9 @@ public class AuthController {
     }
 
     /**
-     * Sinh access và refresh token mới
-     * @param request RefreshToken
-     * @return ACCESS|REFRESH
+     * Generate new access and refresh tokens
+     * @param request refresh token
+     * @return new access and refresh tokens
      */
     @PostMapping("/refresh-token")
     public ResponseEntity<?> refresh(@RequestBody @Valid RefreshTokenRequest request) {
@@ -70,9 +70,9 @@ public class AuthController {
     }
 
     /**
-     * Logout account
-     * @param request access|refresh
-     * @return void
+     * Logout and invalidate tokens
+     * @param request access and refresh tokens
+     * @return no content
      */
     @PostMapping("/logout")
     public ResponseEntity<?> logout(@RequestBody @Valid LogoutRequest request) {

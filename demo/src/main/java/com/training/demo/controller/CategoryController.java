@@ -20,8 +20,8 @@ public class CategoryController {
 
     /**
      * Add a new category
-     * @param categoryRequest request body chứa thông tin category cần thêm
-     * @return ResponseEntity chứa thông tin category vừa thêm
+     * @param categoryRequest request body containing category information to add
+     * @return ResponseEntity containing the added category information
      */
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     @PostMapping("/add")
@@ -33,8 +33,8 @@ public class CategoryController {
     /**
      * Update an existing category
      * @param id the ID of the category to be updated
-     * @param categoryRequest request body chứa thông tin category cần cập nhật
-     * @return ResponseEntity chứa thông tin category vừa cập nhật
+     * @param categoryRequest request body containing category information to update
+     * @return ResponseEntity containing the updated category information
      */
     @PreAuthorize("hasAnyAuthority('ROLE_ADMIN')")
     @PatchMapping("/{id}")
@@ -58,9 +58,9 @@ public class CategoryController {
 
     /**
      * Get all categories with pagination
-     * @param page trang
-     * @param size kích thước trang
-     * @return ResponseEntity chứa danh sách category có phân trang
+     * @param page page number
+     * @param size page size
+     * @return ResponseEntity containing paginated category list
      */
     @GetMapping
     public ResponseEntity<?> getAllCategories(@RequestParam(defaultValue = "0") int page,
@@ -71,7 +71,7 @@ public class CategoryController {
 
     /**
      * Count total categories
-     * @return ResponseEntity chứa tổng số category
+     * @return ResponseEntity containing total category count
      */
     @GetMapping("/count")
     public ResponseEntity<?> countCategories() {
