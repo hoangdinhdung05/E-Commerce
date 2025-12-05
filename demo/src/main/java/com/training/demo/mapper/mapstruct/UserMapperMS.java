@@ -20,7 +20,6 @@ public interface UserMapperMS {
      * @param user User entity
      * @return UserResponse DTO
      */
-    @Mapping(target = "roles", source = "roles")
     UserResponse toUserResponse(User user);
 
     /**

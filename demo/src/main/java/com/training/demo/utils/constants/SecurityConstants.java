@@ -82,6 +82,8 @@ public final class SecurityConstants {
         public static final int MIN_TOKEN_LENGTH = 10;
         public static final String ROLES_CLAIM = "roles";
         public static final String USER_ID_CLAIM = "userId";
+        public static final long ACCESS_TOKEN_EXPIRY_MINUTES = 60;  // 1 hour
+        public static final long REFRESH_TOKEN_EXPIRY_DAYS = 7;     // 7 days
     }
     
     /**

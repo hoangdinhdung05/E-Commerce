@@ -22,8 +22,6 @@ public interface ProductMapperMS {
      * @param product Product entity
      * @return ProductResponse DTO
      */
-    @Mapping(target = "categoryId", source = "category.id")
-    @Mapping(target = "categoryName", source = "category.name")
     ProductResponse toProductResponse(Product product);
 
     /**
@@ -39,7 +37,5 @@ public interface ProductMapperMS {
      * @param productResponse Target DTO to update
      */
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    @Mapping(target = "categoryId", source = "category.id")
-    @Mapping(target = "categoryName", source = "category.name")
     void updateProductResponse(Product product, @MappingTarget ProductResponse productResponse);
 }

@@ -25,7 +25,7 @@ public interface OrderMapperMS {
      */
     @Mapping(target = "userId", source = "user.id")
     @Mapping(target = "username", source = "user.username")
-    @Mapping(target = "orderItems", source = "orderItems")
+    @Mapping(target = "items", source = "orderItems")
     OrderResponse toOrderResponse(Order order);
 
     /**

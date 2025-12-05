@@ -45,9 +45,6 @@ public class LoginUseCase {
         if (user.getStatus() == UserStatus.INACTIVE) {
             throw new BadRequestException(ApiConstants.Messages.USER_INACTIVE);
         }
-        if (user.getStatus() == UserStatus.BANNED) {
-            throw new BadRequestException(ApiConstants.Messages.USER_BANNED);
-        }
 
         // 3. Verify password
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
@@ -61,7 +58,7 @@ public class LoginUseCase {
 
         // 5. Generate tokens
         String accessToken = jwtProvider.generateAccessToken(user);
-        String refreshToken = jwtProvider.generateRefreshToken(user);
+        String refreshToken = jwtProvider.generateRefreshToken(user.getUsername());
 
         // 6. Store tokens in Redis
         storeTokensInRedis(user.getId(), accessToken, refreshToken);

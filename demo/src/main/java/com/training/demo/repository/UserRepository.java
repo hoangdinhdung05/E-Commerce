@@ -19,7 +19,7 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
      * @param username username của người dùng
      * @return Optional<User> nếu tìm thấy, Optional.empty() nếu không tìm thấy
      */
-    @EntityGraph(value = "User.withRoles", type = EntityGraph.EntityGraphType.FETCH)
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"userHasRoles", "userHasRoles.role"})
     Optional<User> findByUsername(String username);
     
     /**
@@ -27,7 +27,7 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
      * @param id ID của người dùng
      * @return Optional<User> nếu tìm thấy
      */
-    @EntityGraph(value = "User.withRoles", type = EntityGraph.EntityGraphType.FETCH)
+    @org.springframework.data.jpa.repository.EntityGraph(attributePaths = {"userHasRoles", "userHasRoles.role"})
     @Query("SELECT u FROM User u WHERE u.id = :id")
     Optional<User> findByIdWithRoles(@Param("id") Long id);
 

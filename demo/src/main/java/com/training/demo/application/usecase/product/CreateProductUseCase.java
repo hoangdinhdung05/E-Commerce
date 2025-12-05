@@ -52,33 +52,17 @@ public class CreateProductUseCase {
             );
         }
 
-        // 3. Upload product image if provided
-        String imageUrl = null;
-        if (request.getImage() != null && !request.getImage().isEmpty()) {
-            try {
-                var uploadResult = fileService.upload(
-                    UploadKind.PRODUCT, 
-                    request.getImage(), 
-                    "products/"
-                );
-                imageUrl = uploadResult.getPublicUrl();
-            } catch (Exception e) {
-                log.error("[CreateProductUseCase] Error uploading image: {}", e.getMessage());
-                throw new BadRequestException("Could not upload product image. Please try again!");
-            }
-        }
-
-        // 4. Create product entity
+        // 3. Create product entity
         Product product = Product.builder()
                 .name(request.getName())
                 .description(request.getDescription())
                 .price(request.getPrice())
-                .stockQuantity(request.getStockQuantity())
-                .image(imageUrl)
+                .quantity(request.getQuantity())
+                .productImageUrl(request.getImageUrl())
                 .category(category)
                 .build();
 
-        // 5. Save product
+        // 4. Save product
         Product savedProduct = productRepository.save(product);
 
         log.info("[CreateProductUseCase] Product created successfully with id: {}", savedProduct.getId());

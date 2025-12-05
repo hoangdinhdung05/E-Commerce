@@ -23,6 +23,8 @@ import com.training.demo.utils.enums.UserStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import static com.training.demo.mapper.AuthMapper.toResponse;
 

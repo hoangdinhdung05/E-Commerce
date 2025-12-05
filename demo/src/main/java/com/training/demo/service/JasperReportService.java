@@ -25,17 +25,6 @@ public class JasperReportService {
     private final ProductRepository productRepository;
     private final PaymentRepository paymentRepository;
 
-    public JasperReportService(
-            JasperReportGenerator reportGenerator,
-            UserRepository userRepository,
-            ProductRepository productRepository,
-            PaymentRepository paymentRepository) {
-        this.reportGenerator = reportGenerator;
-        this.userRepository = userRepository;
-        this.productRepository = productRepository;
-        this.paymentRepository = paymentRepository;
-    }
-
     public byte[] generateUserReportPdf(String username) {
         try {
             log.info("[JasperReportService] Fetching users from database");

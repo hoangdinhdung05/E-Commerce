@@ -45,8 +45,6 @@ public class RegisterUseCase {
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
                 .status(UserStatus.INACTIVE)
                 .verifyEmail(false)
                 .build();

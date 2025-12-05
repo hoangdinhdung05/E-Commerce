@@ -24,7 +24,7 @@ public interface OrderItemMapperMS {
      */
     @Mapping(target = "productId", source = "product.id")
     @Mapping(target = "productName", source = "product.name")
-    @Mapping(target = "productImage", source = "product.image")
+    @Mapping(target = "productImageUrl", source = "product.productImageUrl")
     OrderItemResponse toOrderItemResponse(OrderItem orderItem);
 
     /**

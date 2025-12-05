@@ -69,8 +69,8 @@ public class UpdateProductUseCase {
             product.setPrice(request.getPrice());
         }
 
-        if (request.getStockQuantity() != null) {
-            product.setStockQuantity(request.getStockQuantity());
+        if (request.getQuantity() != null) {
+            product.setQuantity(request.getQuantity());
         }
 
         // 3. Update category if provided
@@ -82,19 +82,9 @@ public class UpdateProductUseCase {
             product.setCategory(category);
         }
 
-        // 4. Update image if provided
-        if (request.getImage() != null && !request.getImage().isEmpty()) {
-            try {
-                var uploadResult = fileService.upload(
-                    UploadKind.PRODUCT, 
-                    request.getImage(), 
-                    "products/"
-                );
-                product.setImage(uploadResult.getPublicUrl());
-            } catch (Exception e) {
-                log.error("[UpdateProductUseCase] Error uploading image: {}", e.getMessage());
-                throw new BadRequestException("Could not upload product image. Please try again!");
-            }
+        // 4. Update image URL if provided
+        if (request.getImageUrl() != null && !request.getImageUrl().isEmpty()) {
+            product.setProductImageUrl(request.getImageUrl());
         }
 
         // 5. Save updated product
