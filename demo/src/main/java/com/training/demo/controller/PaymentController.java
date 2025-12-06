@@ -2,9 +2,13 @@ package com.training.demo.controller;
 
 import com.training.demo.dto.request.Payment.ConfirmPaymentRequest;
 import com.training.demo.dto.request.Payment.CreatePaymentRequest;
+import com.training.demo.dto.response.Payment.PaymentResponse;
 import com.training.demo.dto.response.System.BaseResponse;
 import com.training.demo.security.SecurityUtils;
 import com.training.demo.service.PaymentService;
+import com.training.demo.service.VnPayService;
+import com.training.demo.utils.enums.PaymentMethod;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +19,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/payments")
@@ -23,7 +28,68 @@ import org.springframework.web.bind.annotation.*;
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final VnPayService vnPayService;
 
+
+    // ========== VNPay Integration Endpoints ==========/
+    /**
+     * Tạo VNPay payment cho order
+     * FE sau này chỉ cần gọi endpoint này để lấy URL redirect
+     */
+    @PostMapping("/vnpay/create")
+    public ResponseEntity<?> createVnPayPayment(@Valid @RequestBody CreatePaymentRequest request,
+                                                jakarta.servlet.http.HttpServletRequest httpRequest) {
+        log.info("[PaymentController] Creating VNPay payment for order: {}", request.getOrderId());
+        Long userId = SecurityUtils.getCurrentUserId();
+
+        // ép method = VNPAY nếu bạn dùng enum/string
+        request.setPaymentMethod(PaymentMethod.valueOf("VNPAY"));
+
+        // 1. Tạo Payment (PENDING) dùng service hiện tại
+        var paymentResponse = paymentService.createPayment(userId, request);
+
+        // 2. Gọi VNPayService để build URL
+        String clientIp = httpRequest.getRemoteAddr();
+        String paymentUrl = vnPayService.createPaymentUrl(paymentResponse.getId(), clientIp);
+
+        // 3. Trả ra cho FE
+        java.util.Map<String, Object> data = new java.util.HashMap<>();
+        data.put("payment", paymentResponse);
+        data.put("vnpayUrl", paymentUrl);
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(BaseResponse.success(data));
+    }
+
+    /**
+     * Return URL: VNPay redirect về đây sau khi user thanh toán (LOCAL test BE).
+     * Sau này có FE thì returnUrl sẽ là FE, FE call 1 endpoint verify khác.
+     */
+    @GetMapping("/vnpay/callback")
+    public ResponseEntity<?> handleVnPayCallback(jakarta.servlet.http.HttpServletRequest request) {
+        log.info("[PaymentController] Handling VNPay callback");
+        Map<String, String> vnpParams = new java.util.HashMap<>();
+        request.getParameterMap().forEach((k, v) -> vnpParams.put(k, v[0]));
+
+        PaymentResponse paymentResponse = vnPayService.handleReturn(vnpParams);
+
+        return ResponseEntity.ok(BaseResponse.success(paymentResponse));
+    }
+
+    /**
+     * IPN (webhook) từ VNPay
+     */
+    @GetMapping("/vnpay/ipn")
+    public ResponseEntity<String> handleVnPayIpn(HttpServletRequest request) {
+        log.info("[PaymentController] Handling VNPay IPN");
+        Map<String, String> vnpParams = new java.util.HashMap<>();
+        request.getParameterMap().forEach((k, v) -> vnpParams.put(k, v[0]));
+        String resp = vnPayService.handleIpn(vnpParams);
+        return ResponseEntity.ok(resp);
+    }
+
+    // ========== Payment Management Endpoints ==========/
     /**
      * Get all payments (ADMIN)
      */
