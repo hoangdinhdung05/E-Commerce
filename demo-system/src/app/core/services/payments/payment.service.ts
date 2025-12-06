@@ -98,4 +98,27 @@ export class PaymentService {
     }
     return this.http.get<BaseResponse<string>>(`${environment.apiUrl}/reports/payments/async`, { params });
   }
+
+  // ========== VNPay Integration ==========
+
+  /**
+   * Tạo VNPay payment và lấy URL redirect
+   */
+  createVnPayPayment(request: CreatePaymentRequest): Observable<BaseResponse<{ payment: PaymentResponse, vnpayUrl: string }>> {
+    return this.http.post<BaseResponse<{ payment: PaymentResponse, vnpayUrl: string }>>(
+      `${this.apiUrl}/vnpay/create`, 
+      request
+    );
+  }
+
+  /**
+   * Xử lý callback từ VNPay sau khi thanh toán
+   */
+  handleVnPayCallback(params: any): Observable<BaseResponse<PaymentResponse>> {
+    let httpParams = new HttpParams();
+    Object.keys(params).forEach(key => {
+      httpParams = httpParams.set(key, params[key]);
+    });
+    return this.http.get<BaseResponse<PaymentResponse>>(`${this.apiUrl}/vnpay/callback`, { params: httpParams });
+  }
 }

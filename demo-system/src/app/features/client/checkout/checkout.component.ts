@@ -4,10 +4,12 @@ import { Router } from '@angular/router';
 import { takeUntil } from 'rxjs/operators';
 import { CartService } from '../../../core/services/cart/cart.service';
 import { OrderService } from '../../../core/services/orders/order.service';
+import { PaymentService } from '../../../core/services/payments/payment.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { CartResponse } from '../../../core/models/response/Cart/CartResponse';
 import { CartItemResponse } from '../../../core/models/response/Cart/CartItemResponse';
 import { CheckoutCartRequest } from '../../../core/models/request/Order/CheckoutCartRequest';
+import { CreatePaymentRequest } from '../../../core/models/request/Payment/CreatePaymentRequest';
 import { PaymentMethod } from '../../../utils/PaymentMethod';
 import { ReactiveFormsModule } from '@angular/forms';
 import { environment } from '../../../../environments/environment';
@@ -37,6 +39,7 @@ export class CheckoutComponent extends DestroyableComponent implements OnInit {
     private fb: FormBuilder,
     private cartService: CartService,
     private orderService: OrderService,
+    private paymentService: PaymentService,
     private toastService: ToastService,
     private router: Router
   ) {
@@ -113,19 +116,61 @@ export class CheckoutComponent extends DestroyableComponent implements OnInit {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          this.toastService.success(
-            `Đặt hàng thành công! Mã đơn hàng: ${response.data.orderNumber}`
-          );
+          const order = response.data;
+          const selectedPaymentMethod = this.checkoutForm.get('paymentMethod')?.value;
           
-          // Clear cart
-          this.cartService.refreshCart();
-          
-          // Redirect to order detail or success page
-          this.router.navigate(['/orders', response.data.orderNumber]);
+          // Nếu chọn VNPay, tạo payment và redirect
+          if (selectedPaymentMethod === PaymentMethod.VNPAY) {
+            this.handleVnPayPayment(order.id);
+          } else {
+            // Các payment method khác thì xử lý như cũ
+            this.toastService.success(
+              `Đặt hàng thành công! Mã đơn hàng: ${order.orderNumber}`
+            );
+            
+            // Clear cart
+            this.cartService.refreshCart();
+            
+            // Redirect to order detail or success page
+            this.router.navigate(['/orders', order.orderNumber]);
+          }
         },
         error: (err) => {
           console.error('Checkout error:', err);
           const errorMessage = err.error?.message || 'Đã có lỗi xảy ra khi đặt hàng';
+          this.toastService.error(errorMessage);
+          this.isSubmitting = false;
+        }
+      });
+  }
+
+  /**
+   * Handle VNPay payment flow
+   */
+  private handleVnPayPayment(orderId: number): void {
+    const paymentRequest: CreatePaymentRequest = {
+      orderId: orderId,
+      paymentMethod: PaymentMethod.VNPAY,
+      paymentInfo: 'Thanh toán qua VNPay'
+    };
+
+    this.paymentService.createVnPayPayment(paymentRequest)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          const vnpayUrl = response.data.vnpayUrl;
+          
+          this.toastService.success('Đang chuyển đến trang thanh toán VNPay...');
+          
+          // Clear cart trước khi redirect
+          this.cartService.refreshCart();
+          
+          // Redirect to VNPay payment page
+          window.location.href = vnpayUrl;
+        },
+        error: (err) => {
+          console.error('VNPay payment error:', err);
+          const errorMessage = err.error?.message || 'Không thể tạo thanh toán VNPay';
           this.toastService.error(errorMessage);
           this.isSubmitting = false;
         }
